@@ -1,0 +1,209 @@
+rgn_id,taxa_code,sust_coeff
+1,Atlantic salmon_1022,0.13
+1,Chilean flat oyster_1023,0.811764706
+1,Chilean mussel_1024,0.811764706
+1,Chinook(=Spring=King)salmon_1025,0.370833333
+1,Cholga mussel_1026,0.811764706
+1,Choro mussel_1027,0.811764706
+1,Coho(=Silver)salmon_1028,0.27
+1,Japanese abalone_1029,0.811764706
+1,Pacific cupped oyster_1030,0.53
+1,Peruvian calico scallop_1031,0.833333333
+1,Rainbow trout_1032,0.566666667
+1,Red abalone_1033,0.811764706
+1,Turbot_1034,0.5
+2,Atlantic salmon_1022,0.13
+2,Chilean flat oyster_1023,0.811764706
+2,Chilean mussel_1024,0.811764706
+2,Chinook(=Spring=King)salmon_1025,0.370833333
+2,Cholga mussel_1026,0.811764706
+2,Choro mussel_1027,0.811764706
+2,Coho(=Silver)salmon_1028,0.27
+2,Japanese abalone_1029,0.811764706
+2,Pacific cupped oyster_1030,0.53
+2,Peruvian calico scallop_1031,0.833333333
+2,Rainbow trout_1032,0.566666667
+2,Red abalone_1033,0.811764706
+2,Turbot_1034,0.5
+3,Atlantic salmon_1022,0.13
+3,Chilean flat oyster_1023,0.811764706
+3,Chilean mussel_1024,0.811764706
+3,Chinook(=Spring=King)salmon_1025,0.370833333
+3,Cholga mussel_1026,0.811764706
+3,Choro mussel_1027,0.811764706
+3,Coho(=Silver)salmon_1028,0.27
+3,Japanese abalone_1029,0.811764706
+3,Pacific cupped oyster_1030,0.53
+3,Peruvian calico scallop_1031,0.833333333
+3,Rainbow trout_1032,0.566666667
+3,Red abalone_1033,0.811764706
+3,Turbot_1034,0.5
+4,Atlantic salmon_1022,0.13
+4,Chilean flat oyster_1023,0.811764706
+4,Chilean mussel_1024,0.811764706
+4,Chinook(=Spring=King)salmon_1025,0.370833333
+4,Cholga mussel_1026,0.811764706
+4,Choro mussel_1027,0.811764706
+4,Coho(=Silver)salmon_1028,0.27
+4,Japanese abalone_1029,0.811764706
+4,Pacific cupped oyster_1030,0.53
+4,Peruvian calico scallop_1031,0.833333333
+4,Rainbow trout_1032,0.566666667
+4,Red abalone_1033,0.811764706
+4,Turbot_1034,0.5
+5,Atlantic salmon_1022,0.13
+5,Chilean flat oyster_1023,0.811764706
+5,Chilean mussel_1024,0.811764706
+5,Chinook(=Spring=King)salmon_1025,0.370833333
+5,Cholga mussel_1026,0.811764706
+5,Choro mussel_1027,0.811764706
+5,Coho(=Silver)salmon_1028,0.27
+5,Japanese abalone_1029,0.811764706
+5,Pacific cupped oyster_1030,0.53
+5,Peruvian calico scallop_1031,0.833333333
+5,Rainbow trout_1032,0.566666667
+5,Red abalone_1033,0.811764706
+5,Turbot_1034,0.5
+6,Atlantic salmon_1022,0.13
+6,Chilean flat oyster_1023,0.811764706
+6,Chilean mussel_1024,0.811764706
+6,Chinook(=Spring=King)salmon_1025,0.370833333
+6,Cholga mussel_1026,0.811764706
+6,Choro mussel_1027,0.811764706
+6,Coho(=Silver)salmon_1028,0.27
+6,Japanese abalone_1029,0.811764706
+6,Pacific cupped oyster_1030,0.53
+6,Peruvian calico scallop_1031,0.833333333
+6,Rainbow trout_1032,0.566666667
+6,Red abalone_1033,0.811764706
+6,Turbot_1034,0.5
+7,Atlantic salmon_1022,0.13
+7,Chilean flat oyster_1023,0.811764706
+7,Chilean mussel_1024,0.811764706
+7,Chinook(=Spring=King)salmon_1025,0.370833333
+7,Cholga mussel_1026,0.811764706
+7,Choro mussel_1027,0.811764706
+7,Coho(=Silver)salmon_1028,0.27
+7,Japanese abalone_1029,0.811764706
+7,Pacific cupped oyster_1030,0.53
+7,Peruvian calico scallop_1031,0.833333333
+7,Rainbow trout_1032,0.566666667
+7,Red abalone_1033,0.811764706
+7,Turbot_1034,0.5
+8,Atlantic salmon_1022,0.13
+8,Chilean flat oyster_1023,0.811764706
+8,Chilean mussel_1024,0.811764706
+8,Chinook(=Spring=King)salmon_1025,0.370833333
+8,Cholga mussel_1026,0.811764706
+8,Choro mussel_1027,0.811764706
+8,Coho(=Silver)salmon_1028,0.27
+8,Japanese abalone_1029,0.811764706
+8,Pacific cupped oyster_1030,0.53
+8,Peruvian calico scallop_1031,0.833333333
+8,Rainbow trout_1032,0.566666667
+8,Red abalone_1033,0.811764706
+8,Turbot_1034,0.5
+9,Atlantic salmon_1022,0.13
+9,Chilean flat oyster_1023,0.811764706
+9,Chilean mussel_1024,0.811764706
+9,Chinook(=Spring=King)salmon_1025,0.370833333
+9,Cholga mussel_1026,0.811764706
+9,Choro mussel_1027,0.811764706
+9,Coho(=Silver)salmon_1028,0.27
+9,Japanese abalone_1029,0.811764706
+9,Pacific cupped oyster_1030,0.53
+9,Peruvian calico scallop_1031,0.833333333
+9,Rainbow trout_1032,0.566666667
+9,Red abalone_1033,0.811764706
+9,Turbot_1034,0.5
+10,Atlantic salmon_1022,0.13
+10,Chilean flat oyster_1023,0.811764706
+10,Chilean mussel_1024,0.811764706
+10,Chinook(=Spring=King)salmon_1025,0.370833333
+10,Cholga mussel_1026,0.811764706
+10,Choro mussel_1027,0.811764706
+10,Coho(=Silver)salmon_1028,0.27
+10,Japanese abalone_1029,0.811764706
+10,Pacific cupped oyster_1030,0.53
+10,Peruvian calico scallop_1031,0.833333333
+10,Rainbow trout_1032,0.566666667
+10,Red abalone_1033,0.811764706
+10,Turbot_1034,0.5
+11,Atlantic salmon_1022,0.13
+11,Chilean flat oyster_1023,0.811764706
+11,Chilean mussel_1024,0.811764706
+11,Chinook(=Spring=King)salmon_1025,0.370833333
+11,Cholga mussel_1026,0.811764706
+11,Choro mussel_1027,0.811764706
+11,Coho(=Silver)salmon_1028,0.27
+11,Japanese abalone_1029,0.811764706
+11,Pacific cupped oyster_1030,0.53
+11,Peruvian calico scallop_1031,0.833333333
+11,Rainbow trout_1032,0.566666667
+11,Red abalone_1033,0.811764706
+11,Turbot_1034,0.5
+12,Atlantic salmon_1022,0.13
+12,Chilean flat oyster_1023,0.811764706
+12,Chilean mussel_1024,0.811764706
+12,Chinook(=Spring=King)salmon_1025,0.370833333
+12,Cholga mussel_1026,0.811764706
+12,Choro mussel_1027,0.811764706
+12,Coho(=Silver)salmon_1028,0.27
+12,Japanese abalone_1029,0.811764706
+12,Pacific cupped oyster_1030,0.53
+12,Peruvian calico scallop_1031,0.833333333
+12,Rainbow trout_1032,0.566666667
+12,Red abalone_1033,0.811764706
+12,Turbot_1034,0.5
+14,Atlantic salmon_1022,0.13
+14,Chilean flat oyster_1023,0.811764706
+14,Chilean mussel_1024,0.811764706
+14,Chinook(=Spring=King)salmon_1025,0.370833333
+14,Cholga mussel_1026,0.811764706
+14,Choro mussel_1027,0.811764706
+14,Coho(=Silver)salmon_1028,0.27
+14,Japanese abalone_1029,0.811764706
+14,Pacific cupped oyster_1030,0.53
+14,Peruvian calico scallop_1031,0.833333333
+14,Rainbow trout_1032,0.566666667
+14,Red abalone_1033,0.811764706
+14,Turbot_1034,0.5
+15,Atlantic salmon_1022,0.13
+15,Chilean flat oyster_1023,0.811764706
+15,Chilean mussel_1024,0.811764706
+15,Chinook(=Spring=King)salmon_1025,0.370833333
+15,Cholga mussel_1026,0.811764706
+15,Choro mussel_1027,0.811764706
+15,Coho(=Silver)salmon_1028,0.27
+15,Japanese abalone_1029,0.811764706
+15,Pacific cupped oyster_1030,0.53
+15,Peruvian calico scallop_1031,0.833333333
+15,Rainbow trout_1032,0.566666667
+15,Red abalone_1033,0.811764706
+15,Turbot_1034,0.5
+16,Atlantic salmon_1022,0.13
+16,Chilean flat oyster_1023,0.811764706
+16,Chilean mussel_1024,0.811764706
+16,Chinook(=Spring=King)salmon_1025,0.370833333
+16,Cholga mussel_1026,0.811764706
+16,Choro mussel_1027,0.811764706
+16,Coho(=Silver)salmon_1028,0.27
+16,Japanese abalone_1029,0.811764706
+16,Pacific cupped oyster_1030,0.53
+16,Peruvian calico scallop_1031,0.833333333
+16,Rainbow trout_1032,0.566666667
+16,Red abalone_1033,0.811764706
+16,Turbot_1034,0.5
+17,Atlantic salmon_1022,0.13
+17,Chilean flat oyster_1023,0.811764706
+17,Chilean mussel_1024,0.811764706
+17,Chinook(=Spring=King)salmon_1025,0.370833333
+17,Cholga mussel_1026,0.811764706
+17,Choro mussel_1027,0.811764706
+17,Coho(=Silver)salmon_1028,0.27
+17,Japanese abalone_1029,0.811764706
+17,Pacific cupped oyster_1030,0.53
+17,Peruvian calico scallop_1031,0.833333333
+17,Rainbow trout_1032,0.566666667
+17,Red abalone_1033,0.811764706
+17,Turbot_1034,0.5
