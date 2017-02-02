@@ -1,0 +1,196 @@
+---
+title: "calculate scores using prepped data layers"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(eval = FALSE)
+
+```
+
+
+Once you have prepared your data layer in the prep folder, you are ready to modify goal models and calculate scores using those layers in `functions.r`. 
+
+> `functions.r` is pre-loaded with r codes from the most recent OHI-Global assessment as a reference. You can run through the reference script line-by-line to learn how it has been done. 
+
+In this section, we won't be modifying goal models yet. Instead, to get you familiar with the construct of functions.R and the seqquence of events that are involved in modifying goal models, we'll simply plug in the data layer that you just prepped, saved, and registered (link to previous data prep section), follow these steps to calcalute scores: 
+
+1. Save and register data layers
+
+1. load ohicore and check data layers _in `configure_toolbox.r`_
+
+1. Update goal model _in `conf/functions.r`_
+  - load data (`functions.r`)
+  - calculate status scores (`functions.r`)
+  - calculate trend scores (`functions.r`)
+  - combine status and trend scores (`functions.r`)
+
+1. check and possibly update how the function is called _in `conf/goals.csv`_
+
+1. calculate the remaining component of OHI scores _in `calculate_scores.r`_
+
+Now let's get started and give it a try! 
+
+
+## Step 1: Save and register data layers
+
+_There is a whole section in the manual (http://ohi-science.org/manual/#modifying-goal-models), shoudl we link to it directly?_
+
+### 1.1 Save data layers in the *layers* folder
+
+When you modify existing or create new data layers, we recommend saving this as a new *.csv* file with a suffix identifying your assessment (eg. `_regionYEAR.csv`). Modifying the layer name provides an easy way to track which data layers have been updated regionally, and which rely on global data. Then, the original layers (`_glYEAR.csv` and `_scYEAR.csv`) can be deleted.  
+
+> Tip: filenames should not have any spaces: use an underscore ('_') instead. This will reduce problems when R reads the files.
+
+### 1.2 Register data layers in `layers.csv`  
+
+When there are new filenames associated with each layer, they will need to be registered in `regionYEAR/layers.csv`. If a layer simply has a new filename, only the *filename* column needs to be updated:
+
+![Register new layers in `layers.csv`. Be sure to note if there is a change in the filename.](https://docs.google.com/drawings/d/1adaERJXxzBxCxqBtmvp8uf5g68mHFfakR-Edbh2wwWo/pub?w=1677&h=687)  
+
+However, **if a new layer has been added (for example when a new goal model is developed)**, you will open `layers.csv` in a spreadsheet software (i.e. Microsoft Excel), add a new row in the registry for the new data layer and fill in the first eight columns (columns A-H):
+
+ + **targets:** Add the goal/dimension that the new data layer relates to. Goals are indicated with two-letter codes and sub-goals are indicated with three-letter codes, with pressures, resilience, and spatial layers indicated separately.
+ + **layer:** Add an identifying name for the new data layer, which will be referenced in R scripts like `functions.R` and *.csv* files like `pressures_matrix.csv` and `resilience_matrix.csv`.
+ + **name:** Add a longer title for the data layer.
+ + **description:** Add a longer description of the new data layer.
+ + **fld_value:** Add the appropriate units for the new data layer. It is _the same as the column name in the data file_, which will be referenced in R scripts in subsequent calculations. (example: area_km2)
+ + **units:** Add a description about the *units* chosen in the *fld_value* column above. Think about what units you would like to be displayed online when filling out "units." (example: km^2)
+ + **filename:** Add a filename for the new data layer that matches the name of the *.csv* file that was created previously in the `layers` folder.
+ + **fld_id_num:** Area designation that applies to the newly created data layer, such as: *rgn_id* and *fao_id*.
+
+It is important to check that you have filled you the fields correctly, for instance, if "fld_value" does not match the header of the source data layer, you will see an error message when you try to calculate scores. Other columns are generated later by the Toolbox as it confirms data formatting and content.
+
+## Step 2: source `configure_toolbox.r`
+
+This step syncs different components of the toolbox (eg. data layers, goal functions, etc) and makes sure that you data are ready to be called when you want to modify goal models and calculate scores. More specifically, sourcing `configure_toolbox.r` will: 
+
+1. load the necessary R packages
+2. load scenario configurations (eg. functions.r)
+3. check that data layers are properly formatted and registered 
+4. load data layers so that you can call them in functions.r 
+
+> Note: repeat this step whenever you save a new data layer or change a goal function.  
+
+## Step 3: Update goal model
+Open `functions.r`, go to the appropriate goal function. We will use Artisanal Fishing Opportunity (AO) as an example. 
+
+> Tip. (link to a google drawing image) Clicking the bottom left corner of Console will show you a drop-down menu of all functions. It's a shortcut to jump to the appropriate section or goal model. 
+
+### 3.1 Load data
+
+Run this chunk of code and the data layers will be loaded, joined, and ready to be manipulated further: 
+
+```{r load data}
+
+## "SelectLayersData" is an ohicore funtion to call the appropriate data layer by its layer name registered in`layers.csv` (eg. "ao_access")
+
+## "select"" is a function from the dplyr package to let you select only the columns you would need
+
+r <- SelectLayersData(layers, layers = 'ao_access', narrow=TRUE) %>%
+    select(region_id=id_num, access=val_num)
+r <- na.omit(r)
+
+ry <- SelectLayersData(layers, layers = 'ao_need', narrow=TRUE) %>%
+    select(region_id = id_num, year, need=val_num) %>%
+    left_join(r, by="region_id")
+
+```
+
+
+> Tip: it's always a good idea to check what your data looks like and make sure there are no glaring errors. A couple of commonly used functions are: head() and str()
+
+### 3.2 Calcualte status 
+
+Once you make sure your raw data have been loaded and joined in the right format, you can start calculate status scores!
+
+```{r}
+# model: this step calculates status scores of all years, using the goal model. 
+
+## "mutate" is another commonly used function from dplyr that allows you to add a new column to the data frame
+## Note that "Sustainability" and "status_year" have been defined at the start of the AO function 
+  Sustainability=1.0
+  status_year = 2015
+
+  ry <- ry %>%
+    mutate(Du = (1 - need) * (1 - access)) %>%
+    mutate(status = (1 - Du) * Sustainability)
+
+# status: status scores are typically the most recent year of all the years you have calculated. 
+
+  r.status <- ry %>%
+    filter(year==status_year) %>%
+    select(region_id, status) %>%
+    mutate(status=status*100)
+```
+
+### 3.3 Calculate trend 
+
+Trend scores are typically based on linear regression of status scores from the most recent five years. 
+
+```{r}
+ # choose trend years (eg. most recent five years)
+
+  trend_years <- (status_year-4):(status_year)
+  adj_trend_year <- min(trend_years)
+
+  r.trend = ry %>%
+    group_by(region_id) %>% 
+    # linear model: 
+    do(mdl = lm(status ~ year, data=., subset=year %in% trend_years),
+       adjust_trend = .$status[.$year == adj_trend_year]) %>%
+    # extract the coefficient of year and produce a trend score
+    summarize(region_id, trend = ifelse(coef(mdl)['year']==0, 0, coef(mdl)['year']/adjust_trend * 5)) %>%
+    # make sure that the scores are between -1 and 1
+    mutate(trend = ifelse(trend>1, 1, trend)) %>%
+    mutate(trend = ifelse(trend<(-1), (-1), trend)) %>%
+    mutate(trend = round(trend, 4))
+
+```
+
+### 3.4 Combine status and trend scores 
+
+Choose only region_id and score, and add two more columns identifying score dimension (status or trend) and goal name. 
+```{r}
+ scores = r.status %>%
+    select(region_id, score=status) %>%
+    mutate(dimension='status') %>%
+    rbind(
+      r.trend %>%
+        select(region_id, score=trend) %>%
+        mutate(dimension='trend')) %>%
+    mutate(goal='AO')
+```
+
+## Step 4. Update goal call in `goals.csv`**
+
+`goals.csv` in the `conf` folder provides input information for `functions.r`, particularly about function calls. These are indicated by two columns: *preindex_function* (functions for all goals that do not have sub-goals, and functions for all sub-goals) and *postindex_function* (functions for goals with sub-goals).
+
+In the `preindex_fuction`, you could specify variables such as _status_year_ and _trend_year_, which you can call in your goal function. Note that it is not necessary to specify those variables. If you do not use them in your function as in the CS example, you could delete those variables in `preindex_function`.
+
+> Changing goal weights will be done here by editing the value in the *weight* column. Weights do not need to be 0-1 or add up to 10; weights will be scaled as a proportion of the number of goals assessed. The ten goals are weighted equally by default.
+
+![Check the information in `goals.csv`. It provides input information for `functions.R`. ](https://docs.google.com/drawings/d/17BgYSw2sHbZvHNjUqBlTG-kCOAAn7o6a65O37s0S_es/pub?w=1052&h=719)
+
+![A screenshot of `goals.csv`, used to modify goal model](https://docs.google.com/drawings/d/1o2wtJ9KCPDyGPH9Y4unmALG6BlxX9lmJ_PakDDiQrLo/pub?w=700&h=524)
+
+## Step 5. Calculate overall scores
+
+Hooray you've modified a goal function! Now let's calcalate the remaining score components (pressures, resilience, likely future state, and overall score). This is done in `calculate_scores.r`
+
+_We'll learn how to modify Pressures and Resilience matrix in a different chapter._ 
+
+
+```{r}
+# calculate scenario scores
+scores = CalculateAll(conf, layers, debug=F)
+
+# save scores as .csv file, tables and figures
+write.csv(scores, 'scores.csv', na='', row.names=F)
+```
+
+After the calculation is done, you should be able to see the compiled score sheet for all goals in all regions in sub-country/scores.csv.
+
+It is very likely that during the CalculateAll process you’ll encounter problems and see error messages. In most cases, the error messages can specify what the error is and in which step it occurs, which should be helpful for trouble shooting. Some commonly occurring errors and how to fix them can be found in the Troubleshooting section of the manual.
+
+> Tip: whenever there are changes made (addition, deletion, changes in .csv or r script), you would be notified in the Git window. So here, since you added a new data layer and/more modified a function, and are expecting changes in score.csv, you should see it in Git. This is a good place to double check whether you have made the right changes. 
