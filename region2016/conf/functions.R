@@ -371,6 +371,7 @@ AO = function(layers,
 
   ########### TREND ##############
   # choose trend years (eg. most recent five years)
+  # Trend scores are typically based on linear regression of status scores from the most recent five years.
 
   trend_years <- (status_year-4):(status_year)
   adj_trend_year <- min(trend_years)
@@ -395,6 +396,8 @@ AO = function(layers,
 
 
   ############# COMBINE STATUS AND TREND ############
+  # Choose only region_id and score, and add two more columns identifying score dimension (status or trend) and goal name.
+
   scores = r.status %>%
     select(region_id, score=status) %>%
     mutate(dimension='status') %>%
