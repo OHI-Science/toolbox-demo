@@ -339,6 +339,9 @@ AO = function(layers,
               status_year,
               Sustainability=1.0){
 
+  ########### CALL DATA LAYERS ###########
+  ## "SelectLayersData" is an ohicore funtion to call the appropriate data layer by its layer name registered in`layers.csv` (eg. "ao_access")
+  ## "select"" is a function from the dplyr package to let you select only the columns you would need
 
   r <- SelectLayersData(layers, layers = 'ao_access', narrow=TRUE) %>%
     select(region_id=id_num, access=val_num)
@@ -348,41 +351,50 @@ AO = function(layers,
     select(region_id = id_num, year, need=val_num) %>%
     left_join(r, by="region_id")
 
-  # model
+  ############ MODEL ##############
+  # this step calculates status scores of all years, using the goal model.
+
+  ## "mutate" is another commonly used function from dplyr that allows you to add a new column to the data frame
+  ## Note that "Sustainability" and "status_year" have been defined at the start of the AO function
 
   ry <- ry %>%
     mutate(Du = (1 - need) * (1 - access)) %>%
     mutate(status = (1 - Du) * Sustainability)
 
-  # status
+  ############ STATUS ##############
+  # status: status scores are typically the most recent year of all the years you have calculated.
+
   r.status <- ry %>%
     filter(year==status_year) %>%
     select(region_id, status) %>%
     mutate(status=status*100)
 
-  # trend
+  ########### TREND ##############
+  # choose trend years (eg. most recent five years)
 
   trend_years <- (status_year-4):(status_year)
   adj_trend_year <- min(trend_years)
 
   r.trend = ry %>%
     group_by(region_id) %>%
+    # linear model:
     do(mdl = lm(status ~ year, data=., subset=year %in% trend_years),
        adjust_trend = .$status[.$year == adj_trend_year]) %>%
+    # extract the coefficient of year and produce a trend score
     summarize(region_id, trend = ifelse(coef(mdl)['year']==0, 0, coef(mdl)['year']/adjust_trend * 5)) %>%
-    ungroup() %>%
+    # make sure that the scores are between -1 and 1
     mutate(trend = ifelse(trend>1, 1, trend)) %>%
     mutate(trend = ifelse(trend<(-1), (-1), trend)) %>%
     mutate(trend = round(trend, 4))
 
-  ## reference points
-  rp <- read.csv('temp/referencePoints.csv', stringsAsFactors=FALSE) %>%
-    rbind(data.frame(goal = "AO", method = "??",
-                     reference_point = NA))
-  write.csv(rp, 'temp/referencePoints.csv', row.names=FALSE)
+  # ## reference points:
+  # rp <- read.csv('temp/referencePoints.csv', stringsAsFactors=FALSE) %>%
+  #   rbind(data.frame(goal = "AO", method = "??",
+  #                    reference_point = NA))
+  # write.csv(rp, 'temp/referencePoints.csv', row.names=FALSE)
 
 
-  # return scores
+  ############# COMBINE STATUS AND TREND ############
   scores = r.status %>%
     select(region_id, score=status) %>%
     mutate(dimension='status') %>%
@@ -391,6 +403,7 @@ AO = function(layers,
         select(region_id, score=trend) %>%
         mutate(dimension='trend')) %>%
     mutate(goal='AO') # dlply(scores, .(dimension), summary)
+
   return(scores)
 }
 
