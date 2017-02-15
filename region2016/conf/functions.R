@@ -1681,20 +1681,6 @@ BD = function(scores){
   return(rbind(scores, d[,c('region_id','goal','dimension','score')]))
 }
 
-PreGlobalScores = function(layers, conf, scores){
-
-  # get regions
-  rgns = SelectLayersData(layers, layers=conf$config$layer_region_labels, narrow = TRUE)
-
-  # limit to just desired regions and global (region_id==0)
-  scores = subset(scores, region_id %in% c(rgns[,'id_num'], 0))
-
-  # apply NA to Antarctica
-  id_ant = subset(rgns, val_chr=='Antarctica', id_num, drop = TRUE)
-  scores[scores$region_id==id_ant, 'score'] = NA
-
-  return(scores)
-}
 
 FinalizeScores = function(layers, conf, scores){
 
