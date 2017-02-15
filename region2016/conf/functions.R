@@ -53,12 +53,11 @@ b <- b %>%
     mutate(stock_id = as.character(stock_id))
 
 
-  # ------------------------------------------------------------------------
+
   # STEP 1. Calculate scores for Bbmsy values
-  # -----------------------------------------------------------------------
-  #  *************NOTE *****************************
+  # *************NOTE *****************************
   #  These values can be altered
-  #  ***********************************************
+  # ***********************************************
   alpha <- 0.5
   beta <- 0.25
   lowerBuffer <- 0.95
@@ -72,19 +71,18 @@ b <- b %>%
                           beta))
 
 
-  # ------------------------------------------------------------------------
-  # STEP 1. Merge the b/bmsy data with catch data
-  # -----------------------------------------------------------------------
+
+  # Merge the b/bmsy data with catch data
   data_fis <- c %>%
     left_join(b, by=c('rgn_id', 'stock_id', 'year')) %>%
     select(rgn_id, stock_id, year, taxon_key, catch, bmsy, score)
 
 
-  # ------------------------------------------------------------------------
+
   # STEP 2. Estimate scores for taxa without b/bmsy values
   # Median score of other fish in the region is the starting point
   # Then a penalty is applied based on the level the taxa are reported at
-  # -----------------------------------------------------------------------
+  # ***********************************************
 
   ## this takes the median score within each region
   data_fis_gf <- data_fis %>%
@@ -127,9 +125,9 @@ b <- b %>%
     select(rgn_id, stock_id, year, catch, score)
 
 
-  # ------------------------------------------------------------------------
+
   # STEP 4. Calculate status for each region
-  # -----------------------------------------------------------------------
+  # ***********************************************
 
   # 4a. To calculate the weight (i.e, the relative catch of each stock per region),
   # the mean catch of taxon i is divided by the
@@ -146,9 +144,9 @@ b <- b %>%
     summarize(status = prod(score^wprop)) %>%
     ungroup()
 
-  # ------------------------------------------------------------------------
+
   # STEP 5. Get yearly status and trend
-  # -----------------------------------------------------------------------
+  # ***********************************************
 
   status <-  status_data %>%
     filter(year==status_year) %>%
@@ -339,7 +337,8 @@ AO = function(layers,
               status_year,
               Sustainability=1.0){
 
-  ########### CALL DATA LAYERS ###########
+  ## CALL DATA LAYERS
+  # ***********************************************
   ## "SelectLayersData" is an ohicore funtion to call the appropriate data layer by its layer name registered in`layers.csv` (eg. "ao_access")
   ## "select"" is a function from the dplyr package to let you select only the columns you would need
 
@@ -1441,7 +1440,7 @@ LSP = function(layers, ref_pct_cmpa=30, ref_pct_cp=30, status_year){
 
       trend_years = (status_year-4):status_year
 
-  # select data ----
+  # select data
   r = SelectLayersData(layers, layers=c('rgn_area_inland1km', 'rgn_area_offshore3nm'))  #total offshore/inland areas
   ry = SelectLayersData(layers, layers=c('lsp_prot_area_offshore3nm', 'lsp_prot_area_inland1km')) #total protected areas
 
