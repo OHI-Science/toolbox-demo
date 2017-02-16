@@ -1,10 +1,10 @@
 ## install_ohicore.r
 
-## install_ohicore.r installs the most current version of the `ohicore` R. package. 
-## You will need to only do this once. `ohicore` requires recent versions of R and RStudio. 
+## install_ohicore.r installs the most current version of the `ohicore` R package.
+## You will need to only do this once. `ohicore` requires recent versions of R and RStudio.
   ## 1. Update R. Download the latest version at http://cran.r-project.org.
   ## 2. Update RStudio. Download the latest version at http://www.rstudio.com/products/rstudio/download
-  ## 3. Source or run this script. 
+  ## 3. Source or run this script.
 
 ## delete any existing version of `ohicore`
 for (p in c('ohicore')){
