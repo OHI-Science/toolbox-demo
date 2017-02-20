@@ -334,7 +334,7 @@ FP = function(layers, scores){
 
 
 AO = function(layers,
-              status_year,
+              status_year=2015,
               Sustainability=1.0){
 
   ## CALL DATA LAYERS
