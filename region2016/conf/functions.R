@@ -335,7 +335,7 @@ FP = function(layers, scores){
 
 AO = function(layers,
               status_year=2015,
-              Sustainability=1.0){
+              sustainability=1.0){
 
   ## CALL DATA LAYERS
   # ***********************************************
@@ -358,7 +358,7 @@ AO = function(layers,
 
   ry <- ry %>%
     mutate(Du = (1 - need) * (1 - access)) %>%
-    mutate(status = (1 - Du) * Sustainability)
+    mutate(status = (1 - Du) * sustainability)
 
   ############ STATUS ##############
   # status: status scores are typically the most recent year of all the years you have calculated.
