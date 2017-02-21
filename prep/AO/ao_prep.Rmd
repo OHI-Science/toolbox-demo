@@ -1,0 +1,43 @@
+---
+title: "Artisanal Fishing Opportunities - Data Prep"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(message = FALSE, warning = FALSE, results = "hide")
+
+library(tidyverse)
+```
+
+In this simple excercise, we will make some changes to an exisiting data layer, and save it in "layers" folder. 
+
+First, we will load the data, and make modifications.
+
+```{r load data}
+# load data
+dir_layers <- file.path('~/github/toolbox-demo/region2016/layers')
+
+ao_access <- read_csv(file.path(dir_layers, 'ao_access_gl2016.csv')); head(ao_access)
+
+# make changes to data
+ao_access_new <- ao_access %>% 
+  mutate(value = value*10)
+
+```
+
+
+Now we will save this new data layer in "layers" folder with a new name. 
+
+For better book-keeping and easy access to data in the future, we recommond standardized layer naming format like this: 
+
+"goal_layer_name_assessmentYEAR.csv" (eg. ao_access_demo2017.csv)
+
+```{r save in layers}
+# save as a new data layer in "layers" folder, with a new name
+
+write_csv(ao_access_new, file.path(dir_layers, "ao_access_demo2017.csv"))
+```
+
+NOTE: You should see a notification in the "Git" window in Rstudio once the layer is saved successfully. 
+
+Now, we have modified a data layer, and saved it in layers folder. Before we can start using this new data for calculations, we need to register it in "layers.csv". Let's go back to the tutorial and see how to do that. 
