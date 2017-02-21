@@ -11,17 +11,17 @@ FIS = function(layers, status_year){
   #catch data
   c = SelectLayersData(layers, layers='fis_meancatch', narrow = TRUE) %>%
     select(
-      rgn_id    = id_num,
+      rgn_id            = id_num,
       stock_id_taxonkey = category,
       year,
-      catch          = val_num)
+      catch             = val_num)
   # b_bmsy data
   b = SelectLayersData(layers, layer='fis_b_bmsy', narrow = TRUE) %>%
     select(
-      rgn_id         = id_num,
-      stock_id      = category,
+      rgn_id   = id_num,
+      stock_id = category,
       year,
-      bmsy           = val_num)
+      bmsy     = val_num)
 
 # The following stocks are fished in multiple regions and have high b/bmsy values
 # Due to the underfishing penalty, this actually penalizes the regions that have the highest
