@@ -334,13 +334,13 @@ FP = function(layers, scores){
 
 
 AO = function(layers,
-              status_year,
-              Sustainability=1.0){
+              status_year=2015,
+              sustainability=1.0){
 
   ## CALL DATA LAYERS
   # ***********************************************
   ## "SelectLayersData" is an ohicore funtion to call the appropriate data layer by its layer name registered in`layers.csv` (eg. "ao_access")
-  ## "select"" is a function from the dplyr package to let you select only the columns you would need
+  ## "select" is a function from the dplyr package to let you select only the columns you would need
 
   r <- SelectLayersData(layers, layers = 'ao_access', narrow=TRUE) %>%
     select(region_id=id_num, access=val_num)
@@ -351,14 +351,15 @@ AO = function(layers,
     left_join(r, by="region_id")
 
   ############ MODEL ##############
-  # this step calculates status scores of all years, using the goal model.
+  ## this step calculates status scores of all years, using the goal model.
+  ## Halpern et al. Supplemental Information p. 19: Status for this goal is therefore measured by unmet demand (Du), which includes measures of opportunity for artisanal fishing, and the sustainability of the methods used."
 
   ## "mutate" is another commonly used function from dplyr that allows you to add a new column to the data frame
   ## Note that "Sustainability" and "status_year" have been defined at the start of the AO function
 
   ry <- ry %>%
     mutate(Du = (1 - need) * (1 - access)) %>%
-    mutate(status = (1 - Du) * Sustainability)
+    mutate(status = (1 - Du) * sustainability)
 
   ############ STATUS ##############
   # status: status scores are typically the most recent year of all the years you have calculated.
