@@ -1,9 +1,6 @@
 ## configure_toolbox.r
 
-## configure_repo.r ensures all files in your repo are properly configured.
-
-## It must be sourced before calculating OHI scores with ohicore::CalculateAll();
-## it can be sourced here or is also sourced from calculate_scores.r.
+## configure_toolbox.r ensures all files in your repo are properly configured. It must be sourced before calculating OHI scores; here or from `calculate_scores.r`.
 
 ## You are encouraged to use this script when developing individual goal models. A good workflow is:
   ## 1. prepare data layers in the /prep folders (script as much as possible in R)
