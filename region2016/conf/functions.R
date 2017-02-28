@@ -344,13 +344,19 @@ AO = function(layers,
   ## "SelectLayersData" is an ohicore funtion to call the appropriate data layer by its layer name registered in`layers.csv` (eg. "ao_access")
   ## "select" is a function from the dplyr package to let you select only the columns you would need
 
-  r <- SelectLayersData(layers, layers = 'ao_access', narrow=TRUE) %>%
-    select(region_id=id_num, access=val_num)
-  r <- na.omit(r)
+  ## read in individual data layers
+  d1 <- SelectLayersData(layers, layers = 'ao_access', narrow=TRUE) %>%
+    select(region_id = id_num, access = val_num)
 
-  ry <- SelectLayersData(layers, layers = 'ao_need', narrow=TRUE) %>%
-    select(region_id = id_num, year, need=val_num) %>%
-    left_join(r, by="region_id")
+  d2 <- SelectLayersData(layers, layers = 'ao_need', narrow=TRUE) %>%
+    select(region_id = id_num, year, need = val_num)
+
+  d3 <- SelectLayersData(layers, layers = 'ao_poverty', narrow=TRUE) %>%
+    select(region_id = id_num, year, poverty = val_num)
+
+  ## join data layers into single data frame (see RStudio cheatsheets)
+  ao_data <- left_join(d1, d2, by="region_id") %>%
+    left_join(d3, by=c("region_id", "year"))
 
   ############ MODEL ##############
   ## this step calculates status scores of all years, using the goal model.
@@ -359,19 +365,19 @@ AO = function(layers,
   ## "mutate" is another commonly used function from dplyr that allows you to add a new column to the data frame
   ## Note that "Sustainability" and "status_year" have been defined at the start of the AO function
 
-  ry <- ry %>%
+  ao_model <- ao_data %>%
     mutate(Du = (1 - need) * (1 - access)) %>%
     mutate(status = (1 - Du) * sustainability)
-  # head(ry); summary(ry)
+  # head(ao_model); summary(ao_model)
 
   ############ STATUS ##############
   # status: status scores are typically the most recent year of all the years you have calculated.
 
-  r_status <- ry %>%
+  ao_status <- ao_model %>%
     filter(year==status_year) %>%
     select(region_id, status) %>%
     mutate(status=status*100)
-  # head(r_status); summary(r_status)
+  # head(ao_status); summary(ao_status)
 
 
   ########### TREND ##############
@@ -381,7 +387,7 @@ AO = function(layers,
   trend_years <- (status_year-4):(status_year)
   adj_trend_year <- min(trend_years)
 
-  r_trend = ry %>%
+  ao_trend = ao_model %>%
     group_by(region_id) %>%
     # linear model:
     do(mdl = lm(status ~ year, data=., subset=year %in% trend_years),
@@ -392,16 +398,16 @@ AO = function(layers,
     mutate(trend = ifelse(trend>1, 1, trend)) %>%
     mutate(trend = ifelse(trend<(-1), (-1), trend)) %>%
     mutate(trend = round(trend, 4))
-  # head(r_trend); summary(r_trend)
+  # head(ao_trend); summary(ao_trend)
 
   ############# COMBINE STATUS AND TREND ############
   # Choose only region_id and score, and add two more columns identifying score dimension (status or trend) and goal name.
 
-  scores = r_status %>%
+  scores = ao_status %>%
     select(region_id, score=status) %>%
     mutate(dimension='status') %>%
     rbind(
-      r_trend %>%
+      ao_trend %>%
         select(region_id, score=trend) %>%
         mutate(dimension='trend')) %>%
     mutate(goal='AO')

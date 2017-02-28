@@ -10,7 +10,7 @@ dir_layers <- file.path('~/github/toolbox-demo/region2016/layers')
 
 
 ## import dummy 'local data' that is already formatted nicely. Note the naming convention of the data file: it is "goalcode_layername_assessmentYEAR.csv".
-data_file  <- file.path(dir_layers, 'ao_access_gl2016.csv')
+data_file  <- file.path(dir_layers, 'ao_need_gl2016.csv')
 d <- readr::read_csv(data_file)
 
 ## look at a summary to see the range of values
