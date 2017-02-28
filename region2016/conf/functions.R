@@ -351,12 +351,8 @@ AO = function(layers,
   d2 <- SelectLayersData(layers, layers = 'ao_need', narrow=TRUE) %>%
     select(region_id = id_num, year, need = val_num)
 
-  d3 <- SelectLayersData(layers, layers = 'ao_poverty', narrow=TRUE) %>%
-    select(region_id = id_num, year, poverty = val_num)
-
   ## join data layers into single data frame (see RStudio cheatsheets)
-  ao_data <- left_join(d1, d2, by="region_id") %>%
-    left_join(d3, by=c("region_id", "year"))
+  ao_data <- left_join(d1, d2, by="region_id")
 
   ############ MODEL ##############
   ## this step calculates status scores of all years, using the goal model.
