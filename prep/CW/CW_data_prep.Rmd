@@ -1,0 +1,332 @@
+---
+title: "CW - data prep"
+output: html_document
+---
+
+In this document, we'll walk through the general steps we recommend you include in your own prep document, including:
+
+  - introducing the goal/subgoal, goal model, and data 
+  - setting up directories and loading libraries
+  - loading and formatting data
+  - plotting 
+  - saving as .csv in layers folder
+  
+_This example was modified from the prep document for Nutrients subgoal for [OHI-Baltic Clean Water goal](https://github.com/OHI-Science/bhi/blob/draft/baltic2015/prep/CW/secchi/secchi_prep.Rmd). There are two sources of data for secchi depth measurements. At this moment, we don't know which set is more suitable, and whether or how to combine the two sources. You'll see the process of exploring the two data sets and record the observations and subsequent decisions made on how to deal with the two data sets. The r scirpts included commonly used R commands to manipulate and plot data._ 
+
+# Introduction
+
+_In this section you'll describe the goal/subgoal, what types of information or data are needed, data sources, the goal model, and how to approach trend calculation, etc._
+
+_For example, you can start with a general introduction of what this goal/subgoal is trying to measure, what it means in your local context, and what parameters make sense to be included or explored here._
+
+This subgoal aims to represent the nutrients level in the water in each region. We uses summer time water clarity, measured by secchi depth, as a proxy indicator, assuming a linear relationship between water clarity and nutrient levels. More info on secchi depth can be found [here](http://www.helcom.fi/baltic-sea-trends/indicators/water-clarity). 
+
+## Goal model
+
+_Record what the goal model and reference point should be, how to approach trend calculations, etc._ 
+
+### Status
+
+Xao = Mean Stock Indicator Value / Reference pt
+
+Stock indicators = two HELCOM core indicators assessed for good environemental status (each scored between 0 and 1 by BHI)
+
+Reference pt = maximum possible good environmental status (value=1)
+
+### Trend
+
+_Typically we calculate trend as a linear trend of the last five years of status. In this assessment, however, this approach is not feasible. And an alternative approach is used and documented here._
+
+CPUE time series are available for all stations used for the HELCOM coastal fish populations core indicators. These data were provided by Jens Olsson (FISH PRO II project). To calculate GES status, full time series were used. Therefore, only one status time point and cannot calculate trend of status over time. Instead, we'll follow approach from Bergström et al 2016, but only focus on the final time period for the slope (2004-2013).
+
+Bergstrom et al. 2016. Long term changes in the status of coastal fish in the Baltic Sea. _Estuarin, Coast and Shelf Science_. 169:74-84
+
+Method: 
+
+1. Select final time period of trend assessment (2004-2013)
+
+2. Use time series from both indicators, Key Species and Functional groups. For functional groups,include both cyprinid and piscivore time series
+
+3. For each time series: square-root transform data, z-score, fit linear regression, extract slope
+
+4. Within each time series group (key species, cyprinid, piscivore), take the mean slope for each group within each basin
+
+5. Within each basin take a mean functional group indicator slope (mean of cyprinid mean and piscivore mean)
+
+6. For each basin take overall mean slope - mean of key species and functional group
+
+7. Apply trend value for basin to all BHI regions (except in Gulf of Finland, do not apply Finnish site value to Estonia and Russian regions.)
+
+
+## Data sources
+
+_Here you can record where the data comes from, where it's stored, potential concerns with the data, why you included or excluded certain data, etc:_
+
+
+**ICE**: Data extracted from database and sent by Hjalte Parner on Feb 10 2016.
+
+_Note from Parner: "extraction from our database classified into HELCOM Assessment Units – HELCOM sub basins with coastal WFD water bodies or water types"_
+
+**SMHI**: Downloaded from SMHI [Shark database](http://www.smhi.se/klimatdata/oceanografi/havsmiljodata/marina-miljoovervakningsdata) on Feb 23 2016 by Lena Viktorsson.
+
+_Download notes: datatyp: Physical and Chemical; Parameter: secchi depth._
+
+_Other comments you could also record here:_
+
+Pros and cons of using these data:
+
+- Pros: these are the most recent published data and thus reflect the most current conditions of water quality... 
+- Cons: these datasets don't have full spatial coverage, or don't have even temporal coverage, and thus for some regions we need to do gap filling...
+
+Reasons for exlcuding certain datasets: 
+
+Direct measurements of nutrient levels (eg. phosphate, nitrate, etc) were excluded from this subgoal because not every region measure these chemicals regularly, or we didn't have time-series data on nutrients to be able to calculate trend... 
+
+
+# Data prep process
+
+## Setup 
+
+This section will set up directories, functions, call commonly used libraries, etc, to prepare for the next steps of data prep. 
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = TRUE)
+
+## load common libraries, directories, functions, etc
+
+## Libraries
+library(readr)  # install.packages('readr') 
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(stringr)
+library(tools)
+
+## Directories
+dir_prep = 'github/toolbox-demo/prep' 
+dir_cw   = file.path(dir_prep, 'CW')
+dir_layers = 'github/toolbox-demo/region2016/layers'
+
+```
+
+## Read in data and initial exploration
+
+ICES and SMHI data have non-overlapping observations and were combined to one data set for our use. Some observations were not assigned to any regions (ie. no region IDs attached) and were omitted. 
+
+Both data sets contains profile data (eg temperature, but secchi is only measured once). We need only unique secchi records. Duplicates were thus taken out. 
+
+```{r read in data, echo = FALSE}
+
+#### Read in raw data files 
+
+## read in ices set
+data1 = read_csv(file.path(dir_cw, 'example_data/ices_secchi.csv'))
+
+## quick review of dataset 
+head(data1)
+str(data1)
+
+## read in smhi set
+data2 = read_csv(file.path(dir_cw, 'example_data', 'smhi_secchi.csv'))
+
+head(data2)
+str(data2)
+
+##### NOTE: examples of other functions you could also use for data review
+## colnames(data1)
+## dim(data1) 
+
+#### Initial filtering
+
+ices <- data1 %>% data.frame() %>%
+  select(bhi_id= BHI_ID, secchi, year= Year, month= Month, 
+         lat= Latitude, lon = Longitude, date= Date) %>%
+  mutate(date = as.Date(date, format= "%Y-%m-%d")) %>%
+  mutate(supplier = 'ices')
+
+head(ices)
+str(ices)
+
+#### NOTE: " " identifies the package where the function "select" comes from. It's used here because select is also a function from a different package that's loaded  
+
+## which ices data have BHI_ID of NA
+ices.na <- ices %>%
+           filter(is.na(bhi_id)) 
+
+nrow(ices.na) # counted total of 1684  
+
+## you could do further explorations on why these observations don't have an ID attached. but for simplicity and illustration, 
+## we will ignore bhi_id = NA 
+ices <- ices %>% 
+  filter(!is.na(bhi_id))
+
+###### NOTE: there are other options for data explorations too that are omitted here. For more details, check out section 3.1 of:
+###### https://github.com/OHI-Science/bhi/blob/draft/baltic2015/prep/CW/secchi/secchi_prep.Rmd
+
+smhi <- data2 %>% data.frame()%>%
+  rename(secchi = value) %>%
+  select(bhi_id = BHI_ID, 
+         secchi, 
+         year = Year, 
+         month = Month, 
+         lat = Latitude, 
+         lon= Longitude, 
+         date= Date) %>%
+  mutate(supplier = 'smhi') %>% 
+  filter(!is.na(bhi_id))
+head(smhi)
+
+#### Remove duplicated data within each data set
+
+## is any data duplicated in ices itself
+ices.duplicated = duplicated(ices)
+sum(ices.duplicated==TRUE) #180963  ## MANY duplicates 
+
+## keep only unique records
+new_ices = unique(ices); nrow(new_ices)  #take only unique records # 33018
+
+## is any data duplicated in smhi itself; keeping only unique records
+smhi.duplicated = duplicated(select(smhi))
+sum(smhi.duplicated==TRUE) #56966 ## MANY duplicates  ## removing station does not affect it
+new_smhi = unique(smhi); nrow(new_smhi) #take only unique records # 17090
+
+#### Combine two data sets
+
+## use setdiff() to indentify data smhi not in ices
+new_smhi = setdiff(select(new_smhi,-supplier), select(new_ices,-supplier)) %>%
+            mutate(supplier = "smhi")
+nrow(new_smhi) #10357
+## it appears 461 records are duplicates (if remove cruise and station)
+## if date, lat, lon, secchi all match, I think they are duplicates
+
+## Now create a new allData, bind only the new_smhi object to ices
+allData = bind_rows(new_ices, new_smhi)
+nrow(allData) #43253
+
+## double check that there are no duplicates after combining two data sets
+allData %>% select(year, month, date, lat, lon,secchi) %>% distinct() %>% nrow(.) #43253
+
+```
+
+## Select only summer obervations 
+
+Only summer months post year 2000 were relevant to our use. Therefore we filtered for data in: 
+
+- Months 6-9 (June, July, August, September)  
+- Years 2010-2015
+
+The plots showed that some regions don't have good data coverages. Some basins are missing data for most recent years, such as regions 22 and 25. It appeared that water quality data makes more sense at the basin level, and will be aggregated  to the basin level in the next section. (This is an uncommon case in the Baltic's case, but it's left here for demonstration. )
+
+``` {r select summer data}
+
+summer = allData %>% filter(month %in%c(6:9)) %>%
+        filter(year %in% c(2000:2015))
+head(summer)
+
+## plot: by month
+
+ggplot(summer) + geom_point(aes(month, secchi, colour=supplier))+
+  facet_wrap(~bhi_id, scales ="free_y")
+
+## plot: by year
+
+ggplot(summer) + geom_point(aes(year,secchi, colour=supplier))+
+  facet_wrap(~bhi_id)
+
+```
+
+## Combine data to basin level
+
+```{r combine data to basin level}
+
+# read in data to match basin and region  
+
+basin_lookup = read.csv(file.path(dir_prep, 'example_data', 'bhi_basin_country_lookup.csv'), sep=";") %>%
+  select(bhi_id = BHI_ID, basin_name=Subbasin)
+
+
+# add basin name to regions (bhi_id)
+
+summer = summer %>% full_join(., basin_lookup, by="bhi_id")
+
+#Plot by month and by year
+
+ggplot(summer) + geom_point(aes(month,secchi, colour=supplier))+
+  facet_wrap(~basin_name)
+
+ggplot(summer) + geom_point(aes(year,secchi, colour=supplier))+
+  facet_wrap(~basin_name)
+
+```
+
+## Calculate mean monthly secchi depth by basin
+
+``` {r mean monthly secchi depth}
+
+## calculate monthly means for each month
+mean_months = summer %>% select(year, month,basin_name, secchi) %>%
+              group_by(year, month, basin_name) %>%
+              summarise(mean_secchi = round(mean(secchi, na.rm=TRUE), 1)) %>%
+              ungroup()
+head(mean_months)
+
+## plot monthly means 
+ggplot(mean_months) + geom_point(aes(year,mean_secchi, colour=factor(month))) +
+  geom_line(aes(year, mean_secchi, colour=factor(month))) +
+  facet_wrap(~basin_name)+
+  scale_y_continuous(limits = c(0,10))
+
+## calculate summer means by basin
+## basin summer means = mean of basin monthly mean values
+
+mean_months_summer = mean_months %>% select(year, basin_name, mean_secchi) %>%
+                      group_by(year, basin_name)%>%
+                      summarise(mean_secchi = round(mean(mean_secchi, na.rm=TRUE), 1)) %>%
+                      ungroup()  #in mean calculation all some months to have NA, ignore for that years calculation
+
+## plot summer means by basin
+ggplot(mean_months_summer) + 
+  geom_point(aes(year,mean_secchi)) +
+  geom_line(aes(year,mean_secchi))+
+  facet_wrap(~basin_name)+
+  scale_y_continuous(limits = c(0,10))
+
+```
+
+## Disaggregate data to region level  
+
+Data needs to be deaggregated to the regional level again for status and trend calculations. 
+
+
+```{r deaggregate to region level}
+
+mean_summer_rgn = mean_months_summer %>% 
+  full_join(basin_lookup, by='basin_name') %>% 
+ select(rgn_id = bhi_id, year, mean_secchi)
+
+```
+
+## Save data layer to `layers` folder
+
+When modifying existing or creating new data layers in the prep folder, save the ready-to-use layers in this folder. We recommend saving it as a new *.csv* file with: 
+
+- a prefix identifying the goal (eg. `fis_`)
+- a suffix identifying your assessment (eg. `_sc2016.csv`). 
+
+Modifying the layer name provides an easy way to track which data layers have been updated regionally, and which rely on global data. Then, the original layers (`_gl2016.csv` and `_gl2016placeholder.csv`) can be deleted.  
+
+_**Tip**: filenames should not have any spaces: use an underscore instead. This will reduce problems when R reads the files._
+
+
+```{r}
+write_csv(file.path(dir_layers, "cw_mean_secchi_region2016.csv"))
+```
+
+<!-- _You'll notice that in the original Baltic prep document status and trend were also explored there, instead of functions.r. You could choose to do the same, especially if you want to explore different equations or approaches to trend calculations. We don't always recommend it since this system creates duplicated effortsyou have two places (prep folder and fucntions.r) to update when you make changes to your goal models._ -->
+
+**To render this file and use it to communicate with other human beings**:  
+
+Click on _Knit_ at the top of this window to create an .md file, which can be displayed online as a webpage. Pull/Commit/Push as usual for this file. Click on the .md file in your repo on Github.com to view the rendered file. 
+
+
