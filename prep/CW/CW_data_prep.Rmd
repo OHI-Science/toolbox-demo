@@ -15,11 +15,7 @@ _This example was modified from the prep document for Nutrients subgoal for [OHI
 
 # Introduction
 
-<<<<<<< HEAD
 _In this section you'll describe the goal/subgoal, what types of information or data are needed, data sources, the goal model, and how to approach trend calculation, etc._
-=======
-_In this section you'll introduce the goal/subgoal, what types of information or data are needed, data sources, the goal model, and how to approach trend calculation, etc._
->>>>>>> 5fbf244b65c40ef8bff1c9c403d1d6bf1bd55504
 
 _For example, you can start with a general introduction of what this goal/subgoal is trying to measure, what it means in your local context, and what parameters make sense to be included or explored here._
 
@@ -64,11 +60,7 @@ Method:
 
 ## Data sources
 
-<<<<<<< HEAD
 _Here you can record where the data comes from, where it's stored, potential concerns with the data, why you included or excluded certain data, etc:_
-=======
-_Where the data comes from, where it's stored, potential concerns with the data, why you included or excluded certain data, etc:_
->>>>>>> 5fbf244b65c40ef8bff1c9c403d1d6bf1bd55504
 
 
 **ICE**: Data extracted from database and sent by Hjalte Parner on Feb 10 2016.
