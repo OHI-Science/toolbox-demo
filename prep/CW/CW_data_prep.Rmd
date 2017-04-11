@@ -104,7 +104,7 @@ library(stringr)
 library(tools)
 
 ## Directories
-dir_prep = 'github/toolbox-demo/prep' 
+dir_prep = '~/github/toolbox-demo/prep' 
 dir_cw   = file.path(dir_prep, 'CW')
 dir_layers = 'github/toolbox-demo/region2016/layers'
 
@@ -121,22 +121,16 @@ Both data sets contains profile data (eg temperature, but secchi is only measure
 #### Read in raw data files 
 
 ## read in ices set
-<<<<<<< HEAD
+
 data1 = read_csv(file.path(dir_cw, 'example_data/ices_secchi.csv'))
-=======
-data1 = read_csv(file.path(dir_cw, 'example_data', 'ices_secchi.csv'))
->>>>>>> 5fbf244b65c40ef8bff1c9c403d1d6bf1bd55504
 
 ## quick review of dataset 
 head(data1)
 str(data1)
 
 ## read in smhi set
-<<<<<<< HEAD
+
 data2 = read_csv(file.path(dir_cw, 'example_data', 'smhi_secchi.csv'))
-=======
-data2 = read_csv(file.path(dir_prep, 'example_data', 'smhi_secchi.csv'))
->>>>>>> 5fbf244b65c40ef8bff1c9c403d1d6bf1bd55504
 
 head(data2)
 str(data2)
