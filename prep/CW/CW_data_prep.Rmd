@@ -6,7 +6,7 @@ output: html_document
 In this document, you will learn how to process a data layer, and save it in `layers` folder. 
 
 We'll also walk through the general steps we recommend you include in your own prep document, including:
-
+ 
   - introducing the goal/subgoal, goal model, and data 
   - setting up directories and loading libraries
   - loading and formatting data
