@@ -13,15 +13,15 @@ We'll also walk through the general steps we recommend you include in your own p
   - plotting 
   - saving as .csv in layers folder
   
-_This example was modified from the prep document for Nutrients subgoal for [OHI-Baltic Clean Water goal](https://github.com/OHI-Science/bhi/blob/draft/baltic2015/prep/CW/secchi/secchi_prep.Rmd). There are two sources of data for secchi depth measurements. At this moment, we don't know which set is more suitable, and whether or how to combine the two sources. You'll see the process of exploring the two data sets and record the observations and subsequent decisions made on how to deal with the two data sets. The r scirpts included commonly used R commands to manipulate and plot data._ 
+_The following example was modified from the prep document for [OHI-Baltic Clean Water goal](https://github.com/OHI-Science/bhi/blob/draft/baltic2015/prep/CW/eutrophication/eutrophication_prep.Rmd). We have secchi depth data, which measures water clarity. The desired data layer will provide average summer secchi depth in each year and in each region. At the moment, we don't know what the raw data looks like. We may need to aggregate and manipulate large quantities of data to get the final, clean data layer. _ 
 
 # Introduction
 
-_In this section you'll describe the goal/subgoal, what types of information or data are needed, data sources, the goal model, and how to approach trend calculation, etc._
+_In this section you'll describe the goal/subgoal, what types of information or data are needed, data sources, goal model, and how to approach trend calculation, etc._
 
 _For example, you can start with a general introduction of what this goal/subgoal is trying to measure, what it means in your local context, and what parameters make sense to be included or explored here._
 
-This subgoal aims to represent the nutrients level in the water in each region. We uses summer time water clarity, measured by secchi depth, as a proxy indicator, assuming a linear relationship between water clarity and nutrient levels. More info on secchi depth can be found [here](http://www.helcom.fi/baltic-sea-trends/indicators/water-clarity). 
+This subgoal aims to represent the eutrophication level in the water in each region. We uses summer time water clarity, measured by secchi depth, as a proxy indicator, assuming a linear relationship between water clarity and nutrient levels. More info on secchi depth can be found [here](http://www.helcom.fi/baltic-sea-trends/indicators/water-clarity). 
 
 ## Goal model
 
@@ -31,7 +31,7 @@ _Record what the goal model and reference point should be, how to approach trend
 
 Xao = Mean Stock Indicator Value / Reference pt
 
-Stock indicators = two HELCOM core indicators assessed for good environemental status (each scored between 0 and 1 by BHI)
+Stock indicators = two HELCOM core indicators assessed for good environmental status (each scored between 0 and 1 by BHI)
 
 Reference pt = maximum possible good environmental status (value=1)
 
@@ -74,7 +74,7 @@ Pros and cons of using these data:
 - Pros: these are the most recent published data and thus reflect the most current conditions of water quality... 
 - Cons: these datasets don't have full spatial coverage, or don't have even temporal coverage, and thus for some regions we need to do gap filling...
 
-Reasons for exlcuding certain datasets: 
+Reasons for excluding certain datasets: 
 
 Direct measurements of nutrient levels (eg. phosphate, nitrate, etc) were excluded from this subgoal because not every region measure these chemicals regularly, or we didn't have time-series data on nutrients to be able to calculate trend... 
 
@@ -135,7 +135,7 @@ ices <- data1 %>% data.frame() %>%
          lat= Latitude, lon = Longitude, date= Date) %>%
   mutate(date = as.Date(date, format= "%Y-%m-%d")) 
 
-head(ices) ###????? didn't show up ????########
+head(ices) 
 str(ices)
 
 ## which ices data have BHI_ID of NA?
@@ -160,16 +160,17 @@ new_ices = unique(ices); nrow(new_ices)  #take only unique records # 33018
 
 ```
 
-## Select only summer obervations 
+## Select only summer observations 
 
 Only summer months post year 2000 were relevant to our use. Therefore we filtered for data in: 
 
 - Months 6-9 (June, July, August, September)  
 - Years 2010-2015
 
-The plots showed that some regions don't have good data coverages. Some basins are missing data for most recent years, such as regions 22 and 25. It appeared that water quality data makes more sense at the basin level, and will be aggregated  to the basin level in the next section. (This is an uncommon case in the Baltic's case, but it's left here for demonstration. )
+The plots showed that some regions don't have good data coverage. Some basins are missing data for most recent years, such as regions 22 and 25. It appeared that water quality data makes more sense at the basin level, and will be aggregated  to the basin level in the next section. (This is an uncommon case in the Baltic's case, but it's left here for demonstration. )
 
 _Plotting is a good way to spot data gaps and other potential problems. Without plotting, we might have missed these temporal gaps._ 
+
 ``` {r select summer data}
 ## select summer months
 summer = new_ices %>% filter(month %in%c(6:9)) %>%
@@ -207,14 +208,14 @@ ggplot(mean_months) + geom_point(aes(year,mean_secchi, colour=factor(month))) +
   facet_wrap(~bhi_id)+
   scale_y_continuous(limits = c(0,10))
 
-## calculate summer means by basin
-## basin summer means = mean of basin monthly mean values
+## calculate summer means by region
+## region summer means = mean of region monthly mean values
 
 mean_months_summer = mean_months %>% 
                       group_by(bhi_id, year)%>%
                       summarise(mean_secchi = round(mean(mean_secchi, na.rm=TRUE), 1)) %>%
-                      ungroup()  %>% #in mean calculation all some months to have NA, ignore for that years calculation           
-  rename(rgn_id = bhi_id)
+                      ungroup()  %>% 
+  rename(rgn_id = bhi_id) #### rgn_id is a required field in a data layer!! ###
 
 ## plot summer means by basin
 ggplot(mean_months_summer) + 
@@ -224,6 +225,8 @@ ggplot(mean_months_summer) +
   scale_y_continuous(limits = c(0,10))
 
 ```
+
+_Congratulations! You have successfully wrangled a large dataset and produced a clean data layer. In order for the Toolbox to use it for calculation, we need to save it in the right location and register it. Let's go back to the Training page for a minute and learn from there._ 
 
 ## Save data layer to `layers` folder
 
@@ -246,4 +249,5 @@ write_csv(mean_months_summer, file.path(dir_layers, "cw_mean_secchi_region2016.c
 
 Click on _Knit_ at the top of this window to create an .md file, which can be displayed online as a webpage. Pull/Commit/Push as usual for this file. Click on the .md file in your repo on Github.com to view the rendered file. 
 
+_Now we have saved the layer in `layers` folder, there is only one more thing left to do - register it in the data registry. Let's switch back to where we left off in Training._
 
