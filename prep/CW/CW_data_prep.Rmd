@@ -131,12 +131,11 @@ str(data1)
 #### Initial filtering #####
 
 ices <- data1 %>% data.frame() %>%
-  select(bhi_id= BHI_ID, secchi, year= Year, month= Month, 
+  select(bhi_id = BHI_ID, secchi, year= Year, month= Month, 
          lat= Latitude, lon = Longitude, date= Date) %>%
-  mutate(date = as.Date(date, format= "%Y-%m-%d")) %>%
-  mutate(supplier = 'ices')
+  mutate(date = as.Date(date, format= "%Y-%m-%d")) 
 
-head(ices)
+head(ices) ###????? didn't show up ????########
 str(ices)
 
 ## which ices data have BHI_ID of NA?
@@ -174,15 +173,15 @@ _Plotting is a good way to spot data gaps and other potential problems. Without 
 ``` {r select summer data}
 ## select summer months
 summer = new_ices %>% filter(month %in%c(6:9)) %>%
-        filter(year %in% c(2000:2015))
+        filter(year %in% c(2010:2015))
 head(summer)
 
 ## plot: by month
-ggplot(summer) + geom_point(aes(month, secchi, colour=supplier))+
+ggplot(summer) + geom_point(aes(month, secchi))+
   facet_wrap(~bhi_id, scales ="free_y")
 
 ## plot: by year
-ggplot(summer) + geom_point(aes(year,secchi, colour=supplier))+
+ggplot(summer) + geom_point(aes(year,secchi))+
   facet_wrap(~bhi_id)
 
 ```
@@ -214,7 +213,8 @@ ggplot(mean_months) + geom_point(aes(year,mean_secchi, colour=factor(month))) +
 mean_months_summer = mean_months %>% 
                       group_by(bhi_id, year)%>%
                       summarise(mean_secchi = round(mean(mean_secchi, na.rm=TRUE), 1)) %>%
-                      ungroup()  #in mean calculation all some months to have NA, ignore for that years calculation
+                      ungroup()  %>% #in mean calculation all some months to have NA, ignore for that years calculation           
+  rename(rgn_id = bhi_id)
 
 ## plot summer means by basin
 ggplot(mean_months_summer) + 
