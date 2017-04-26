@@ -17,7 +17,7 @@ We'll walk through the general steps we recommend you include in your own prep d
   - plotting 
   - saving as .csv in layers folder
   
-_This example was modified from the prep document for Nutrients subgoal for [OHI-Baltic Clean Water goal](https://github.com/OHI-Science/bhi/blob/draft/baltic2015/prep/CW/secchi/secchi_prep.Rmd). There are two sources of data for secchi depth measurements. At this moment, we don't know which set is more suitable, and whether or how to combine the two sources. You'll see the process of exploring the two data sets and record the observations and subsequent decisions made on how to deal with the two data sets. The r scirpts included commonly used R commands to manipulate and plot data._ 
+_This example was modified from the prep document for Nutrients subgoal for [OHI-Baltic Clean Water goal](https://github.com/OHI-Science/bhi/blob/draft/baltic2015/prep/CW/secchi/secchi_prep.Rmd). There are two sources of data for secchi depth measurements. At this moment, we don't know which set is more suitable, and whether or how to combine the two sources. You'll see the process of exploring the two data sets and record the observations and subsequent decisions made on how to deal with the two data sets. The r scripts included commonly used R commands to manipulate and plot data._ 
 
 # Introduction
 
@@ -35,7 +35,7 @@ _Record what the goal model and reference point should be, how to approach trend
 
 Xao = Mean Stock Indicator Value / Reference pt
 
-Stock indicators = two HELCOM core indicators assessed for good environemental status (each scored between 0 and 1 by BHI)
+Stock indicators = two HELCOM core indicators assessed for good environmental status (each scored between 0 and 1 by BHI)
 
 Reference pt = maximum possible good environmental status (value=1)
 
@@ -78,7 +78,7 @@ Pros and cons of using these data:
 - Pros: these are the most recent published data and thus reflect the most current conditions of water quality... 
 - Cons: these datasets don't have full spatial coverage, or don't have even temporal coverage, and thus for some regions we need to do gap filling...
 
-Reasons for exlcuding certain datasets: 
+Reasons for excluding certain datasets: 
 
 Direct measurements of nutrient levels (eg. phosphate, nitrate, etc) were excluded from this subgoal because not every region measure these chemicals regularly, or we didn't have time-series data on nutrients to be able to calculate trend... 
 
@@ -165,24 +165,24 @@ new_ices = unique(ices); nrow(new_ices)  #take only unique records # 33018
 
 ```
 
-## Select only summer obervations 
+## Select only summer observations 
 
 Only summer months post year 2000 were relevant to our use. Therefore we filtered for data in: 
 
 - Months 6-9 (June, July, August, September)  
 - Years 2010-2015
 
-The plots showed that some regions don't have good data coverages. Some basins are missing data for most recent years, such as regions 22 and 25. It appeared that water quality data makes more sense at the basin level, and will be aggregated  to the basin level in the next section. (This is an uncommon case in the Baltic's case, but it's left here for demonstration. )
+The plots showed that some regions don't have good data coverage. Some basins are missing data for most recent years, such as regions 22 and 25. It appeared that water quality data makes more sense at the basin level, and will be aggregated  to the basin level in the next section. (This is an uncommon case in the Baltic's case, but it's left here for demonstration. )
 
 _Plotting is a good way to spot data gaps and other potential problems. Without plotting, we might have missed these temporal gaps._ 
 ``` {r select summer data}
 ## select summer months
-summer = new_ices %>% filter(month %in%c(6:9)) %>%
+summer = new_ices %>% filter(month %in% c(6:9)) %>%
         filter(year %in% c(2000:2015))
 head(summer)
 
 ## plot: by month
-ggplot(summer) + geom_point(aes(month, secchi, colour=supplier))+
+ggplot(summer) + geom_point(aes(month, secchi, colour=supplier)) +
   facet_wrap(~bhi_id, scales ="free_y")
 
 ## plot: by year
