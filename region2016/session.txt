@@ -1,0 +1,60 @@
+R version 3.3.1 (2016-06-21)
+Platform: x86_64-apple-darwin13.4.0 (64-bit)
+Running under: OS X 10.11.6 (El Capitan)
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] ohicore_0.1        yaml_2.1.14        brew_1.0-6         jsonlite_1.2       rgdal_1.2-5        sp_1.2-4           git2r_0.16.0      
+ [8] stringr_1.1.0      dplyr_0.5.0        purrr_0.2.2        readr_1.0.0        tidyr_0.6.1        tibble_1.2         ggplot2_2.2.1.9000
+[15] tidyverse_1.1.1    ohirepos_0.1.0    
+
+loaded via a namespace (and not attached):
+ [1] Rcpp_0.12.9.1     plyr_1.8.4        base64enc_0.1-3   forcats_0.2.0     tools_3.3.1       digest_0.6.12     viridisLite_0.1.3
+ [8] lubridate_1.6.0   memoise_1.0.0     nlme_3.1-128      gtable_0.2.0      lattice_0.20-34   psych_1.6.12      DBI_0.5-1        
+[15] curl_2.3          parallel_3.3.1    haven_1.0.0       xml2_1.1.1        withr_1.0.2       httr_1.2.1        knitr_1.15.1     
+[22] htmlwidgets_0.8   hms_0.3           devtools_1.12.0   grid_3.3.1        R6_2.2.0          plotly_4.5.6      readxl_0.1.1     
+[29] foreign_0.8-67    modelr_0.1.0      reshape2_1.4.2    magrittr_1.5      htmltools_0.3.5   scales_0.4.1      rvest_0.3.2      
+[36] assertthat_0.1    mnormt_1.5-5      colorspace_1.3-1  stringi_1.1.2     lazyeval_0.2.0    munsell_0.4.3     broom_0.4.1      
+[43] zoo_1.7-13       
+
+
+
+Package: ohicore
+Description: A collection of functions for generically calculating the Ocean
+    Health Index scores as well as individual goals and sub-goals.
+Version: 0.1
+Date: 2013-09-25
+Title: Ocean Health Index calculation package
+Author: Ben Best, Steve Hastings, Darren Hardy
+Maintainer: Ben Best <bbest@nceas.ucsb.edu>
+License: MIT
+LazyData: TRUE
+Depends: R (>= 3.1.0)
+Imports: dplyr (>= 0.3), ggplot2 (>= 1.0.0), plyr (>= 1.8.0), reshape2,
+        stringr, git2r, rgdal, sp, methods, tidyr, RColorBrewer,
+        htmlwidgets, plotly
+Suggests: testthat
+Collate: 'CalculateAll.R' 'CalculateGoalIndex.R'
+        'CalculatePressuresAll.R' 'CalculateResilienceAll.R'
+        'CheckLayers.R' 'Conf.R' 'Layers.R' 'PlotFlower.R'
+        'ScoreScaling.R' 'SelectLayersData.R' 'compare_scores_df.R'
+        'gapfill_georegions.R' 'name_to_rgn.R' 'read_git_csv.R'
+        'shp_to_geojson.R' 'trace_git_csv_value.R' 'mapvalues.R'
+        'change_plot.R'
+RoxygenNote: 5.0.1
+Built: R 3.3.1; ; 2016-09-13 18:16:25 UTC; unix
+RemoteType: github
+RemoteHost: https://api.github.com
+RemoteRepo: ohicore
+RemoteUsername: ohi-science
+RemoteRef: master
+RemoteSha: 410cebbbd111f4523746518116ea9a5dc27a7125
+GithubRepo: ohicore
+GithubUsername: ohi-science
+GithubRef: master
+GithubSHA1: 410cebbbd111f4523746518116ea9a5dc27a7125
