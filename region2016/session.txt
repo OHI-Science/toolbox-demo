@@ -1,0 +1,76 @@
+R version 3.4.1 (2017-06-30)
+Platform: x86_64-apple-darwin15.6.0 (64-bit)
+Running under: macOS Sierra 10.12.6
+
+Matrix products: default
+BLAS: /System/Library/Frameworks/Accelerate.framework/Versions/A/Frameworks/vecLib.framework/Versions/A/libBLAS.dylib
+LAPACK: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/libRlapack.dylib
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] ohicore_0.2          knitr_1.17           bindrcpp_0.2        
+ [4] forcats_0.2.0        stringr_1.2.0        dplyr_0.7.2         
+ [7] purrr_0.2.3          readr_1.1.1          tidyr_0.7.1         
+[10] tibble_1.3.4         ggplot2_2.2.1        tidyverse_1.1.1.9000
+[13] ohirepos_0.1.0      
+
+loaded via a namespace (and not attached):
+ [1] Rcpp_0.12.12      lubridate_1.6.0   lattice_0.20-35   zoo_1.8-0        
+ [5] clisymbols_1.2.0  rprojroot_1.2     assertthat_0.2.0  digest_0.6.12    
+ [9] psych_1.7.5       V8_1.5            R6_2.2.2          cellranger_1.1.0 
+[13] plyr_1.8.4        backports_1.1.0   evaluate_0.10.1   httr_1.3.1       
+[17] rlang_0.1.2       lazyeval_0.2.0    curl_2.8.1        readxl_1.0.0     
+[21] rstudioapi_0.6    geojsonio_0.4.0   rmarkdown_1.6     boxes_0.0.0.9000 
+[25] devtools_1.13.3   rgdal_1.2-8       foreign_0.8-69    RCurl_1.95-4.8   
+[29] munsell_0.4.3     broom_0.4.2       compiler_3.4.1    modelr_0.1.1     
+[33] pkgconfig_2.0.1   mnormt_1.5-5      htmltools_0.3.6   rgeos_0.3-23     
+[37] tidyselect_0.1.1  roxygen2_6.0.1    crayon_1.3.2.9000 withr_2.0.0      
+[41] bitops_1.0-6      commonmark_1.2    grid_3.4.1        nlme_3.1-131     
+[45] jsonlite_1.5      gtable_0.2.0      git2r_0.19.0      magrittr_1.5     
+[49] scales_0.4.1      stringi_1.1.5     reshape2_1.4.2    sp_1.2-5         
+[53] testthat_1.0.2    xml2_1.1.1        brew_1.0-6        tools_3.4.1      
+[57] glue_1.1.1        hms_0.3           parallel_3.4.1    yaml_2.1.14      
+[61] colorspace_1.3-2  maptools_0.9-2    rvest_0.3.2       memoise_1.1.0    
+[65] bindr_0.1         haven_1.1.0      
+
+
+
+Package: ohicore
+Description: A collection of functions for generically calculating the Ocean
+    Health Index scores as well as individual goals and sub-goals.
+Version: 0.2
+Date: 2016-07-28
+Title: Ocean Health Index calculation package
+Author: Ben Best, Melanie Frazier, Julia Stewart Lowndes, Casey O'Hara, Ning Jiang Mendes, Jamie Afflerbach, Steve Hastings, Darren Hardy
+Maintainer: Melanie Frazier <frazier@nceas.ucsb.edu>
+License: MIT
+LazyData: TRUE
+Depends: R (>= 3.1.0)
+Imports: dplyr (>= 0.3), ggplot2 (>= 1.0.0), plyr (>= 1.8.0), reshape2,
+        stringr, git2r, rgdal, sp, methods, tidyr, RColorBrewer,
+        htmlwidgets,
+Suggests: testthat
+Collate: 'CalculateAll.R' 'CalculateGoalIndex.R'
+        'CalculatePressuresAll.R' 'CalculateResilienceAll.R'
+        'CheckLayers.R' 'Conf.R' 'Layers.R' 'PlotFlower.R'
+        'ScoreScaling.R' 'SelectLayersData.R' 'compare_scores_df.R'
+        'gapfill_georegions.R' 'name_to_rgn.R' 'name_2_rgn.R'
+        'collapse_2_rgn.R' 'data.R' 'read_git_csv.R' 'shp_to_geojson.R'
+        'trace_git_csv_value.R' 'mapvalues.R'
+RoxygenNote: 6.0.1
+Built: R 3.4.1; ; 2017-08-25 18:58:52 UTC; unix
+RemoteType: github
+RemoteHost: https://api.github.com
+RemoteRepo: ohicore
+RemoteUsername: ohi-science
+RemoteRef: dev
+RemoteSha: 62ecbec3ed3eee5e4dca76030e8c7d8f279e52e2
+GithubRepo: ohicore
+GithubUsername: ohi-science
+GithubRef: dev
+GithubSHA1: 62ecbec3ed3eee5e4dca76030e8c7d8f279e52e2
