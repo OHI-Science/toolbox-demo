@@ -1,0 +1,16 @@
+---
+title: <center>An Ocean Health Index for Toolbox Demo
+author:  
+output:
+  html_document:
+    fig_width: 1
+---
+
+----
+
+The Ocean Health Index measures and tracks the benefits and services that the ocean provides for people now and into the future. This assessment is being developed with the support of local stakeholders to better understand how to sustainably balance current and future ocean use.
+
+
+<center><img src="images/school_fish_NOAA_David Burdick.jpg" width="700px"></center>  
+
+[![](images/ohi-logo.png)](http://ohi-science.org)

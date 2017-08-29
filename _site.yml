@@ -1,0 +1,21 @@
+name: "The Ocean Health Index for Toolbox Demo"
+navbar:
+  title: "Home"
+  left:
+    - text: "About"
+      href: about.html
+    - text: "Frequently Asked Questions"
+      href: faq.html
+#    - text: "Goals"  ## NOTE: to display this page you'll need to delete eval=FALSE on the .Rmd
+#      href: goals.html
+#    - text: "Scores" ## NOTE: to display this page you'll need to delete eval=FALSE on the .Rmd
+#     href: scores.html
+    - text: "Who we are"
+      href: who_we_are.html
+output_dir: "."
+output:
+  html_document:
+    theme: yeti
+    highlight: textmate
+    css:
+      - "_sass/main.css"

@@ -1,0 +1,75 @@
+---
+title: <center>Frequently Asked Questions
+output: html_document
+---
+
+<!--- please edit as needed!--->
+
+----
+
+## Why is this study being done in <%=study_area%>?
+
+There is a need to assess and track the oceans comprehensively in <%=study_area%> by combining the best available social, economic, and environmental information. This can help chart a path forward to increase economic opportunities and human well being while sustainably managing these critical resources.
+
+We will develop a repeatable, transparent method for measuring progress toward healthy oceans in <%=study_area%>. The ultimate goal is to enable our community to prioritize policy decisions that affect the sustainability of our ocean resources.
+
+<br>
+
+## What is the timeline and spatial scale of this project?
+
+*To be updated*
+
+<br>
+
+## What year does this OHI assessment represent?  
+
+The assessment will be completed in [*year to be completed*]. It will represent the ocean health in this year using the best available information that will continue to be updated in the future. The most recent data available will be incorporated into the assessment for each goal, so years may vary depending on the data set. This first assessment will serve as our baseline for future assessments. 
+
+<br>
+
+## Will there be future assessments?
+
+OHI assessments can be updated annually or on other management time frames with less effort than its initial development. This is because all analysis is done with open source collaborative software (R, RStudio, Git, GitHub) and can be updated with the most recent data. <%=study_area%> OHI assessments will continue as long as there is ongoing interest and support from ocean management agencies and stakeholders. 
+
+<br>
+
+## Will the data layers be available?
+
+Yes. All data layers will be available on this website when they are finalized. <!--- www/ohi-science.org/<%=key%>/layers. ---> OHI assessments depend on data that are freely available and updated regularly so assessments can be repeated to track changes in ocean health.  
+
+<br>
+
+## What does each goal score mean? 
+
+Scores for each goal represent the present status for each goal measured against a set reference point (50% of the score) and the likely future status of the goal (50% of the score). Likely future status is assessed based on the status trend (status score over the last 5 years), resilience actions (policies, initiatives, habitat protection, enforcement, local stewardship, etc), and cumulative pressures (human impacts to ocean habitats, pollution, social pressures, economic indicators, etc).
+
+<br>
+
+## How are each goal’s reference points set?
+
+Goals are developed with the best information available, often with the help of stakeholders and experts. Reference points are specific to each goal and can be temporal, spatial, established targets (management targets, policies or mandates, or established goal), or production function or established model (example: maximum sustainable yield equation). Goal reference points are set use SMART principles that are Specific, Measurable, Ambitious, Realistic, and Time-bound.
+
+<br>
+
+## What proportion of the index contains things that local management can change or influence? 
+
+Goal scores will respond to management targets through interactions with resilience layers. Some of the goals have management targets as set reference points and so those goals will directly change as we approach those targets. 
+
+<br>
+
+## How does the OHI relate to ongoing ocean management efforts?
+
+Management strategies can be tested with the OHI to understand cross sector impacts and benefits. The OHI is designed to provide context for management decisions and explore actions (in part through setting SMART reference points) that support sustainable ocean use. This assessment can be used to communicate how achieving these targets will support ocean health in <%=study_area%>. 
+
+<br>
+
+## How adaptive is OHI to adaptive management?
+
+The OHI is very adaptable and can incorporate new management targets, policies, and new scientific research. This information is generally incorporated into pressure or resilience scores for each goal. For example, new research on the impacts of marine debris can be incorporated as a more precise pressure layer for clean water and tourism goals. If goal metrics and reference points are updated then the goal score not be comparable to prior assessments. However, previous assessments can be back-calculated using the updated methods to make them comparable to track progress. Updating goal metrics and reference points will be done in future assessments if there is consensus to do so and updating the goal will increase our understanding of sustainable ocean use and ocean health.
+
+<br>
+
+## How can we have a large impact and create meaningful change using the OHI?
+
+The OHI incorporates diverse stakeholders to create a coalition for ocean health. The index will work to incorporate management and local stewardship actions to incentivize actions across private partners, agencies, managers, and policy makers to increase sustainable ocean use and ultimately ocean health. 
+

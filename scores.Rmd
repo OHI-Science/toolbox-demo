@@ -1,0 +1,55 @@
+---
+title: "Scores"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+---
+
+```{r setup, eval = FALSE, echo=FALSE, warning=FALSE, message=FALSE}
+source("./_site.R")
+```
+
+Ocean Health Index scores are calculated for each region for each goal before being combined into an overall Index score for Toolbox Demo. 
+
+Scores for each goal represent the present status for each goal measured against a set reference point (50% of the score) and the likely future status of the goal (50% of the score). Likely future status is calculated with the status, the trend (status score over the last 5 years), resilience actions (policies, initiatives, habitat protection, enforcement, local stewardship, etc), and cumulative pressures (human impacts to ocean habitats, pollution, social pressures, economic indicators, etc).
+
+Flower plots display preliminary scores, with each petal representing an individual goal. Petal lengths convey the score of the goal, thus longer petals are closer to achieving their target. Only goals that are relevant to a region are scored, otherwise they are set to NA with grey petals. All scores are on a scale from 0-100, and the center number is the region's Index score.
+
+----
+
+<!---
+NOTE: Here the flower plots are displayed for each region and the overall assessment area (rgn_id = 0). Figures will be displayed directly from online in the reports/figures folder: to make sure you're displaying the most recent flower plots here's what to do: 
+1. from the master branch, save new flower plots, and push
+2. from the gh-pages branch, reknit this page or rebuild the website, and push!
+--->
+
+```{r plot_flower, eval=FALSE, results='asis'}
+
+## regions info: order regions to start with whole study_area
+regions <- bind_rows(
+  data_frame(                
+    region_id   = 0,
+    region_name = 'Toolbox Demo'),
+  read_csv(sprintf('%s/spatial/regions_list.csv', dir_scenario_gh)) %>%
+    select(region_id   = rgn_id,
+           region_name = rgn_name))
+
+## path for figures to display
+regions <- regions %>%
+  mutate(flower_png = sprintf('%s/reports/figures/flower_%s.png',
+                              dir_scenario_gh,
+                              stringr::str_replace_all(region_name, ' ', '_')))
+
+
+## display header, flower ----
+
+cat(sprintf('## %s\n\n![](%s)\n\n\n\n', regions$region_name, regions$flower_png), 
+    sep = "")
+
+```
+
+
+[<img src="https://docs.google.com/drawings/d/1633uvIYgsBhiKBddQAaTlvYDJgOK1uiDB6wkooNyhFc/pub?w=576&h=288" width="100px">](http://ohi-science.org)  
+[ohi-science.org home](http://ohi-science.org)
+
