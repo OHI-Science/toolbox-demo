@@ -1465,6 +1465,53 @@ LSP <- function(layers){
   return(scores[,c('region_id','goal','dimension','score')])
 }
 
+LSP_ex <- function(layers){
+  ### an example when there are only data available for the entire assessment area, not for each region.
+
+  ### our assessment area has 8 regions...
+
+  ## total offshore/inland areas
+  inland <- layers$data$rgn_area_inland1km %>%
+    select(region_id = rgn_id, area_inland1km = area); inland
+  offshore <- layers$data$rgn_area_offshore3nm %>%
+    select(region_id = rgn_id, area_offshore3nm = area); offshore
+
+  ## total protected
+  inland_prot <- layers$data$lsp_prot_area_inland1km %>%
+    select(region_id = rgn_id, cmpa = a_prot_1km, year); inland_prot
+  offshore_prot <- layers$data$lsp_prot_area_offshore3nm %>%
+    select(region_id = rgn_id, cp = a_prot_3nm, year); offshore_prot
+
+
+  ### ...but let's pretend we only had data for the entire assessment area and not those regions:
+
+  inland   <- data_frame(region_id = 0, area_in = 175147)
+  offshore <- data_frame(region_id = 0, area_off = 621887.8)
+  inland_prot   <- data_frame(region_id = 0, cmpa = 15369.5)
+  offshore_prot <- data_frame(region_id = 0, cp = 30635.50)
+
+  ## combine to one dataframe
+  lsp_data <- inland %>%
+    left_join(inland_prot) %>%
+    left_join(offshore) %>%
+    left_join(offshore_prot)
+
+  ### you can calculate the status for just this overall assessment area, and then apply the status score to all the regions so that the Toolbox can calculate the pressures/resilience for those regions.
+
+  ## model
+  status_0 <- lsp_data %>%
+    dplyr::mutate(score = area_in/cp + area_off/cmpa)
+
+  ## apply to all regions
+  status <- data_frame(region_id = 1:8,
+                       score  = status_0$score) %>%
+    mutate(goal = "LSP",
+           dimension = "status") %>%
+    arrange(goal, dimension, region_id, score)
+
+}
+
+
 SP <- function(scores){
 
   ## to calculate the four SP dimesions, average those dimensions for ICO and LSP
