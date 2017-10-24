@@ -9,7 +9,7 @@
 source("~/github/toolbox-demo/region2016/configure_toolbox.r")
 
 ## calculate scenario scores
-scores = ohicore::CalculateAll(conf, layers)
+scores <-  ohicore::CalculateAll(conf, layers)
 
 ## save scores as scores.csv
 write.csv(scores, 'scores.csv', na='', row.names=FALSE)
