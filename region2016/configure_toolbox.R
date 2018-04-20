@@ -10,11 +10,11 @@
   ## 3. source configure_repo.r to ensure proper configuration
   ## 4. develop goal models in functions.r, running individual goal models line by line
 
-## load required packages after checking whether they are already installed
-packages_required  <- c('ohicore', 'tidyverse', 'stringr', 'zoo')
-packages_check     <- packages_required[!packages_required %in% (.packages())]
-if(length(packages_check)) install.packages(packages_check)
-packages_installed <- sapply(packages_required, FUN = function(x) library(x, character.only = TRUE))
+## load required packages. If not installed, install from the comment
+library(ohicore)   # run install_ohicore.R
+library(tidyverse) # install.packages('tidyverse')
+library(stringr)   # install.packages('stringr')
+library(zoo)       # install.packages('zoo')
 
 setwd("~/github/toolbox-demo/region2016")
 
@@ -26,3 +26,7 @@ ohicore::CheckLayers('layers.csv', 'layers', flds_id=conf$config$layers_id_field
 
 ## load scenario layers for ohicore to access. Layers files are not modified.
 layers = ohicore::Layers('layers.csv', 'layers')
+
+## select corresponding data year to use for pressures and resilience
+scenario_years <- 2016
+layers$data$scenario_year <- scenario_years
