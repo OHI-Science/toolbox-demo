@@ -6,7 +6,7 @@
 
 FIS <- function(layers) {
   scen_year <- layers$data$scenario_year
-  
+
   #catch data
   c <-
     AlignDataYears(layer_nm = "fis_meancatch", layers_obj = layers) %>%
@@ -16,20 +16,20 @@ FIS <- function(layers) {
       stock_id_taxonkey,
       catch = mean_catch
     )
-  
+
   #  b_bmsy data
-  
+
   b <-
     AlignDataYears(layer_nm = "fis_b_bmsy", layers_obj = layers) %>%
     select(region_id = rgn_id, stock_id, year = scenario_year, bbmsy)
-  
+
   # The following stocks are fished in multiple regions and have high b/bmsy values
   # Due to the underfishing penalty, this actually penalizes the regions that have the highest
   # proportion of catch of these stocks.  The following corrects this problem:
   # tmp <- filter(b, stock_id %in% c('Katsuwonus_pelamis-71', 'Clupea_harengus-27', 'Trachurus_capensis-47')) %>%
   #   arrange(stock_id, year) %>%
   #   data.frame()
-  
+
   high_bmsy <- c(
     'Katsuwonus_pelamis-71',
     'Clupea_harengus-27',
@@ -37,12 +37,12 @@ FIS <- function(layers) {
     'Sardinella_aurita-34',
     'Scomberomorus_cavalla-31'
   )
-  
+
   b <- b %>%
     mutate(bbmsy = ifelse(stock_id %in% high_bmsy &
                             bbmsy > 1, 1, bbmsy))
-  
-  
+
+
   # separate out the stock_id and taxonkey:
   c <- c %>%
     mutate(stock_id_taxonkey = as.character(stock_id_taxonkey)) %>%
@@ -54,15 +54,15 @@ FIS <- function(layers) {
     mutate(region_id = as.numeric(as.character(region_id))) %>%
     mutate(taxon_key = as.numeric(as.character(taxon_key))) %>%
     select(region_id, year, stock_id, taxon_key, catch)
-  
+
   # general formatting:
   b <- b %>%
     mutate(bbmsy = as.numeric(bbmsy)) %>%
     mutate(region_id = as.numeric(as.character(region_id))) %>%
     mutate(year = as.numeric(as.character(year))) %>%
     mutate(stock_id = as.character(stock_id))
-  
-  
+
+
   ####
   # STEP 1. Calculate scores for Bbmsy values
   ####
@@ -73,7 +73,7 @@ FIS <- function(layers) {
   beta <- 0.25
   lowerBuffer <- 0.95
   upperBuffer <- 1.05
-  
+
   b$score = ifelse(
     b$bbmsy < lowerBuffer,
     b$bbmsy,
@@ -87,28 +87,28 @@ FIS <- function(layers) {
                      1 - alpha * (b$bbmsy - upperBuffer),
                      beta
                    ))
-  
-  
+
+
   ####
   # STEP 1. Merge the b/bmsy data with catch data
   ####
   data_fis <- c %>%
     left_join(b, by = c('region_id', 'stock_id', 'year')) %>%
     select(region_id, stock_id, year, taxon_key, catch, bbmsy, score)
-  
-  
+
+
   ###
   # STEP 2. Estimate scores for taxa without b/bmsy values
   # Median score of other fish in the region is the starting point
   # Then a penalty is applied based on the level the taxa are reported at
   ###
-  
+
   ## this takes the median score within each region and year
   data_fis_gf <- data_fis %>%
     group_by(region_id, year) %>%
     mutate(Median_score = quantile(score, probs = c(0.5), na.rm = TRUE)) %>%
     ungroup()
-  
+
   ## this takes the median score across all regions within a year(when no stocks have scores within a region)
   data_fis_gf <- data_fis_gf %>%
     group_by(year) %>%
@@ -117,16 +117,16 @@ FIS <- function(layers) {
     ungroup() %>%
     mutate(Median_score = ifelse(is.na(Median_score), Median_score_global, Median_score)) %>%
     select(-Median_score_global)
-  
+
   #  *************NOTE *****************************
   #  In some cases, it may make sense to alter the
   #  penalty for not identifying fisheries catch data to
   #  species level.
   #  ***********************************************
-  
+
   penaltyTable <- data.frame(TaxonPenaltyCode = 1:6,
                              penalty = c(0.1, 0.25, 0.5, 0.8, 0.9, 1))
-  
+
   data_fis_gf <- data_fis_gf %>%
     mutate(TaxonPenaltyCode = as.numeric(substring(taxon_key, 1, 1))) %>%
     left_join(penaltyTable, by = 'TaxonPenaltyCode') %>%
@@ -134,8 +134,8 @@ FIS <- function(layers) {
     mutate(method = ifelse(is.na(score), "Median gapfilled", NA)) %>%
     mutate(gapfilled = ifelse(is.na(score), 1, 0)) %>%
     mutate(score = ifelse(is.na(score), score_gf, score))
-  
-  
+
+
   gap_fill_data <- data_fis_gf %>%
     select(region_id,
            stock_id,
@@ -147,91 +147,86 @@ FIS <- function(layers) {
            method) %>%
     filter(year == scen_year)
   write.csv(gap_fill_data, 'temp/FIS_summary_gf.csv', row.names = FALSE)
-  
+
   status_data <- data_fis_gf %>%
     select(region_id, stock_id, year, catch, score)
-  
-  
+
+
   ###
   # STEP 4. Calculate status for each region
   ###
-  
+
   # 4a. To calculate the weight (i.e, the relative catch of each stock per region),
   # the mean catch of taxon i is divided by the
   # sum of mean catch of all species in region/year
-  
+
   status_data <- status_data %>%
     group_by(year, region_id) %>%
     mutate(SumCatch = sum(catch)) %>%
     ungroup() %>%
     mutate(wprop = catch / SumCatch)
-  
+
   status_data <- status_data %>%
     group_by(region_id, year) %>%
     summarize(status = prod(score ^ wprop)) %>%
     ungroup()
-  
+
   ###
   # STEP 5. Get yearly status and trend
   ###
-  
+
   status <-  status_data %>%
     filter(year == scen_year) %>%
     mutate(score     = round(status * 100, 1),
            dimension = 'status') %>%
     select(region_id, score, dimension)
-  
-  
+
+
   # calculate trend
-  
+
   trend_years <- (scen_year - 4):(scen_year)
-  
+
   trend <-
     CalculateTrend(status_data = status_data, trend_years = trend_years)
-  
-  ## Reference Point Accounting
-  WriteRefPoint(goal   = "FIS",
-                method = "Functional relationship (B/Bmsy)",
-                ref_pt = NA)
-  ## Reference Point End
-  
+
+
   # assemble dimensions
   scores <- rbind(status, trend) %>%
     mutate(goal = 'FIS') %>%
     filter(region_id != 255)
   scores <- data.frame(scores)
-  
+
   return(scores)
 }
 
 
 MAR <- function(layers) {
   scen_year <- layers$data$scenario_year
-  
+
   harvest_tonnes <-
     AlignDataYears(layer_nm = "mar_harvest_tonnes", layers_obj = layers)
-  
-  
+
+
   sustainability_score <-
     AlignDataYears(layer_nm = "mar_sustainability_score", layers_obj = layers)
-  
+
   popn_inland25mi <-
     AlignDataYears(layer_nm = "mar_coastalpopn_inland25mi", layers_obj = layers) %>%
     mutate(popsum = popsum + 1)
-  
-  
+
+
   rky <-  harvest_tonnes %>%
     left_join(sustainability_score,
               by = c('rgn_id', 'taxa_code', 'scenario_year')) %>%
     select(rgn_id, scenario_year, taxa_code, tonnes, sust_coeff)
-  
-  
+
+
   # fill in gaps with no data
   rky <- spread(rky, scenario_year, tonnes)
   rky <- gather(rky, "scenario_year", "tonnes",-(1:3)) %>%
     mutate(scenario_year = as.numeric(scenario_year))
-  
-  
+
+
   # 4-year rolling mean of data
   m <- rky %>%
     group_by(rgn_id, taxa_code, sust_coeff) %>%
@@ -239,13 +234,13 @@ MAR <- function(layers) {
     mutate(sm_tonnes = zoo::rollapply(tonnes, 4, mean, na.rm = TRUE, partial =
                                         TRUE)) %>%
     ungroup()
-  
-  
+
+
   # smoothed mariculture harvest * sustainability coefficient
   m <- m %>%
     mutate(sust_tonnes = sust_coeff * sm_tonnes)
-  
-  
+
+
   # aggregate all weighted timeseries per region, and divide by coastal human population
   ry = m %>%
     group_by(rgn_id, scenario_year) %>%
@@ -253,22 +248,12 @@ MAR <- function(layers) {
     left_join(popn_inland25mi, by = c('rgn_id', 'scenario_year')) %>%
     mutate(mar_pop = sust_tonnes_sum / popsum) %>%
     ungroup()
-  
+
   # get reference quantile based on argument years
-  
+
   ref_95pct <- quantile(ry$mar_pop, 0.95, na.rm = TRUE)
- 
-  ## Reference Point Accounting
-    ry_ref = ry %>%
-    arrange(mar_pop) %>%
-    filter(mar_pop >= ref_95pct)
-  
-   WriteRefPoint(
-    goal = "MAR",
-    method = "spatial 95th quantile",
-    ref_pt = paste0("region id: ", ry_ref$rgn_id[1], ' value: ', ref_95pct))
-  ## Reference Point End
-  
+
+
   ry = ry %>%
     mutate(status = ifelse(mar_pop / ref_95pct > 1,
                            1,
@@ -278,31 +263,31 @@ MAR <- function(layers) {
     mutate(dimension = "status") %>%
     select(region_id = rgn_id, score = status, dimension) %>%
     mutate(score = round(score * 100, 2))
-  
-  
+
+
   # calculate trend
-  
+
   trend_years <- (scen_year - 4):(scen_year)
-  
+
   trend <- CalculateTrend(status_data = ry, trend_years = trend_years)
-  
-  
+
+
   # return scores
   scores = rbind(status, trend) %>%
     mutate(goal = 'MAR')
-  
+
   return(scores)
 }
 
 
 FP <- function(layers, scores) {
   scen_year <- layers$data$scenario_year
-  
+
   w <-
     AlignDataYears(layer_nm = "fp_wildcaught_weight", layers_obj = layers) %>%
     filter(scenario_year == scen_year) %>%
     select(region_id = rgn_id, w_fis)
-  
+
   # scores
   s <- scores %>%
     filter(goal %in% c('FIS', 'MAR')) %>%
@@ -310,8 +295,8 @@ FP <- function(layers, scores) {
     left_join(w, by = "region_id")  %>%
     mutate(w_mar = 1 - w_fis) %>%
     mutate(weight = ifelse(goal == "FIS", w_fis, w_mar))
-  
-  
+
+
   ## Some warning messages due to potential mismatches in data:
   # NA score but there is a weight
   tmp <-
@@ -324,7 +309,7 @@ FP <- function(layers, scores) {
       paste(as.character(tmp$region_id), collapse = ", ")
     ))
   }
-  
+
   tmp <-
     filter(s,
            goal == 'MAR' &
@@ -335,7 +320,7 @@ FP <- function(layers, scores) {
       paste(as.character(tmp$region_id), collapse = ", ")
     ))
   }
-  
+
   # score, but the weight is NA or 0
   tmp <-
     filter(
@@ -351,7 +336,7 @@ FP <- function(layers, scores) {
       paste(as.character(tmp$region_id), collapse = ", ")
     ))
   }
-  
+
   tmp <-
     filter(
       s,
@@ -366,7 +351,7 @@ FP <- function(layers, scores) {
       paste(as.character(tmp$region_id), collapse = ", ")
     ))
   }
-  
+
   s <- s  %>%
     group_by(region_id, dimension) %>%
     summarize(score = weighted.mean(score, weight, na.rm = TRUE)) %>%
@@ -374,7 +359,7 @@ FP <- function(layers, scores) {
     ungroup() %>%
     select(region_id, goal, dimension, score) %>%
     data.frame()
-  
+
   # return all scores
   return(rbind(scores, s))
 }
@@ -382,23 +367,23 @@ FP <- function(layers, scores) {
 
 AO <- function(layers) {
   Sustainability <- 1.0
-  
+
   scen_year <- layers$data$scenario_year
-  
+
   r <- AlignDataYears(layer_nm = "ao_access", layers_obj = layers) %>%
     rename(region_id = rgn_id, access = value) %>%
     na.omit()
-  
+
   ry <-
     AlignDataYears(layer_nm = "ao_need", layers_obj = layers) %>%
     rename(region_id = rgn_id, need = value) %>%
     left_join(r, by = c("region_id", "scenario_year"))
-  
+
   # model
   ry <- ry %>%
     mutate(Du = (1 - need) * (1 - access)) %>%
     mutate(status = (1 - Du) * Sustainability)
-  
+
   # status
   r.status <- ry %>%
     filter(scenario_year == scen_year) %>%
@@ -406,30 +391,25 @@ AO <- function(layers) {
     mutate(status = status * 100) %>%
     select(region_id, score = status) %>%
     mutate(dimension = 'status')
-  
+
   # trend
-  
+
   trend_years <- (scen_year - 4):(scen_year)
-  
+
   r.trend <- CalculateTrend(status_data = ry, trend_years = trend_years)
-  
-## Reference Point Accounting
-    WriteRefPoint(goal   = "AO",
-                method = "XXXXXXXX",
-                ref_pt = NA)
- ## Reference Point End
-    
+
+
   # return scores
   scores <- rbind(r.status, r.trend) %>%
     mutate(goal = 'AO')
-  
+
   return(scores)
 }
 
 NP <- function(scores, layers) {
   scen_year <- layers$data$scenario_year
-  
-  
+
+
   ###########################################################.
   ### Here I define five main sub-functions.  The main script that
   ### actually calls these functions is at the very end of the NP section.
@@ -438,24 +418,24 @@ NP <- function(scores, layers) {
   ###   np_calc_risk
   ###   np_calc_sustainability
   ###   np_calc_scores
-  
+
   np_rebuild_harvest <- function(layers) {
     ### Reassembles NP harvest information from separate data layers:
     ### [rgn_name  rgn_id  product  year  tonnes  tonnes_rel  prod_weight]
     #########################################.
-    
+
     ## load data from layers dataframe
     h_tonnes <-
       AlignDataYears(layer_nm = "np_harvest_tonnes", layers_obj = layers) %>%
       select(year = scenario_year, region_id = rgn_id, product, tonnes)
-    
+
     h_tonnes_rel <-
       AlignDataYears(layer_nm = 'np_harvest_tonnes_relative', layers_obj = layers) %>%
       select(year = scenario_year,
              region_id = rgn_id,
              product,
              tonnes_rel)
-    
+
     h_w <-
       AlignDataYears(layer_nm = "np_harvest_product_weight", layers_obj = layers) %>%
       select(
@@ -464,37 +444,37 @@ NP <- function(scores, layers) {
         product,
         prod_weight = weight
       )
-    
-    
+
+
     # merge harvest in tonnes and usd
     np_harvest <- h_tonnes %>%
       full_join(h_tonnes_rel, by = c('region_id', 'product', 'year')) %>%
       left_join(h_w, by = c('region_id', 'product', 'year'))
-    
+
     return(np_harvest)
   }
-  
-  
+
+
   np_calc_exposure <- function(np_harvest, hab_extent, FIS_status) {
     ### calculates NP exposure based on habitats (for corals, seaweeds,
     ### ornamentals, shells, sponges).
     ### Returns the first input data frame with a new column for exposure:
     ### [rgn_id rgn_name product year tonnes tonnes_rel prod_weight exposure]
     #########################################.
-    
+
     ### Determine Habitat Areas for Exposure
-    
+
     hab_rocky <-
       AlignDataYears(layer_nm = "hab_rockyreef_extent", layers_obj = layers) %>%
       select(region_id = rgn_id, year = scenario_year, km2) %>%
       filter(km2 > 0)
-    
+
     hab_coral <-
       AlignDataYears(layer_nm = "hab_coral_extent", layers_obj = layers) %>%
       select(region_id = rgn_id, year = scenario_year, km2) %>%
       filter(km2 > 0)
-    
-    
+
+
     ### area for products having single habitats for exposure
     area_single_hab <- bind_rows(
       # corals in coral reef
@@ -506,7 +486,7 @@ NP <- function(scores, layers) {
         filter(product == 'seaweeds') %>%
         left_join(hab_rocky, by = c('region_id', 'year'))
     )
-    
+
     ### area for products in both coral and rocky reef habitats: shells, ornamentals, sponges
     area_dual_hab <- np_harvest %>%
       filter(product %in% c('shells', 'ornamentals', 'sponges')) %>%
@@ -520,7 +500,7 @@ NP <- function(scores, layers) {
       mutate(km2 = sum(c(rocky_km2, coral_km2), na.rm = TRUE)) %>%
       filter(km2 > 0) %>%
       select(-coral_km2,-rocky_km2)
-    
+
     ### Determine Exposure
     ### exposure: combine areas, get tonnes / area, and rescale with log transform
     np_exp <-
@@ -534,13 +514,13 @@ NP <- function(scores, layers) {
              exposure = ifelse(exposure > 1, 1, exposure)) %>%
       select(-km2,-expos_raw,-expos_prod_max)
     ### clean up columns
-    
+
     gap_fill <- np_exp %>%
       mutate(gapfilled = ifelse(is.na(exposure), 1, 0)) %>%
       mutate(method = ifelse(is.na(exposure), "prod_average", NA)) %>%
       select(rgn_id = region_id, product, year, gapfilled, method)
     write.csv(gap_fill, 'temp/NP_exposure_gf.csv', row.names = FALSE)
-    
+
     ### add exposure for countries with (habitat extent == NA)
     np_exp <- np_exp %>%
       group_by(product) %>%
@@ -549,11 +529,11 @@ NP <- function(scores, layers) {
       select(-mean_exp) %>%
       ungroup() %>%
       mutate(product = as.character(product))
-    
-    
+
+
     return(np_exp)
   }
-  
+
   np_calc_risk <- function(np_exp, r_cyanide, r_blast) {
     ### calculates NP risk based on:
     ###   ornamentals:      risk = 1 if blast or cyanide fishing
@@ -563,32 +543,32 @@ NP <- function(scores, layers) {
     ### Returns a data frame of risk, by product, by region:
     ###
     #########################################.
-    
+
     ### Determine Risk
-    
+
     r_cyanide <-
       AlignDataYears(layer_nm = "np_cyanide", layers_obj = layers) %>%
       filter(!is.na(score) & score > 0) %>%
       select(region_id = rgn_id,
              year = scenario_year,
              cyanide = score)
-    
+
     r_blast <-
       AlignDataYears(layer_nm = "np_blast", layers_obj = layers)  %>%
       filter(!is.na(score) & score > 0) %>%
       select(region_id = rgn_id,
              year = scenario_year,
              blast = score)
-    
-    
-    
+
+
+
     ### risk for ornamentals set to 1 if blast or cyanide fishing present, based on Nature 2012 code
     ###  despite Nature 2012 Suppl saying Risk for ornamental fish is set to the "relative intensity of cyanide fishing"
     risk_orn <- r_cyanide %>%
       full_join(r_blast, by = c("region_id", "year")) %>%
       mutate(ornamentals = 1) %>%
       select(region_id, year, ornamentals)
-    
+
     ### risk as binary
     ### fixed risk: corals (1), sponges (0) and shells (0)
     np_risk <-
@@ -603,10 +583,10 @@ NP <- function(scores, layers) {
       mutate(ornamentals = ifelse(is.na(ornamentals), 0, ornamentals)) %>%
       gather(product, risk,-region_id,-year) %>%
       mutate(product = as.character(product))
-    
+
     return(np_risk)
   }
-  
+
   np_calc_sustainability <- function(np_exp, np_risk) {
     ### calculates NP sustainability coefficient for each natural product, based
     ### on (1 - mean(c(exposure, risk))).  Returns first input dataframe with
@@ -614,20 +594,20 @@ NP <- function(scores, layers) {
     ### NP product_status:
     ### [rgn_id  rgn_name  product  year  prod_weight  sustainability  product_status]
     #########################################.
-    
+
     ### FIS status for fish oil sustainability
     # FIS_status <- read.csv('scores.csv')%>%  ## this is for troubleshooting
     FIS_status   <-  scores %>%
       filter(goal == 'FIS' & dimension == 'status') %>%
       select(rgn_id = region_id, score)
-    
-    
+
+
     ### join Exposure (with harvest) and Risk
     np_sust <- np_exp %>%
       left_join(np_risk, by = c('region_id', 'year', 'product')) %>%
       rowwise() %>%
       mutate(sustainability = 1 - mean(c(exposure, risk), na.rm = TRUE))
-    
+
     ### add in fish_oil sustainability based on FIS scores calculated above:
     ### add fish_oil (no exposure calculated, sustainability is based on FIS score only, and not exposure/risk components)
     ### same for all years
@@ -635,28 +615,28 @@ NP <- function(scores, layers) {
       mutate(sustainability = score / 100) %>%
       mutate(sustainability = ifelse(is.na(sustainability), 0, sustainability)) %>%
       select(region_id = rgn_id, sustainability)
-    
+
     np_sus_fis_oil <- np_harvest %>%
       filter(product == 'fish_oil') %>%
       mutate(exposure = NA) %>%
       mutate(risk = NA) %>%
       left_join(fish_oil_sust, by = 'region_id') %>%
       mutate(product = as.character(product))
-    
+
     np_sust <- np_sust %>%
       bind_rows(np_sus_fis_oil)
-    
-    
+
+
     ### calculate rgn-product-year status
     np_sust <- np_sust %>%
       mutate(product_status = tonnes_rel * sustainability) %>%
       filter(region_id <= 250) %>%  # disputed regions
       select(-tonnes,-tonnes_rel,-risk,-exposure) %>%
       ungroup()
-    
+
     return(np_sust)
   }
-  
+
   np_calc_scores <- function(np_sust) {
     ### Calculates NP status for all production years for each region, based
     ### upon weighted mean of all products produced.
@@ -666,7 +646,7 @@ NP <- function(scores, layers) {
     ### Returns data frame with status and trend by region:
     ### [goal   dimension   region_id   score]
     #########################################.
-    
+
     ### Calculate status, trends
     ### aggregate across products to rgn-year status, weighting by usd_rel
     np_status_all <- np_sust %>%
@@ -676,7 +656,7 @@ NP <- function(scores, layers) {
       summarize(status = weighted.mean(product_status, prod_weight)) %>%
       filter(!is.na(status)) %>% # 1/0 produces NaN
       ungroup()
-    
+
     ### get current status
     np_status_current <- np_status_all %>%
       filter(year == scen_year & !is.na(status)) %>%
@@ -687,47 +667,42 @@ NP <- function(scores, layers) {
       min(np_status_current$score, na.rm = TRUE) >= 0,
       max(np_status_current$score, na.rm = TRUE) <= 100
     )
-    
+
     ### trend
-    
+
     trend_years <- (scen_year - 4):(scen_year)
-    
+
     np_trend <-
       CalculateTrend(status_data = np_status_all, trend_years = trend_years)
-    
+
     ### return scores
     np_scores <- np_status_current %>%
       full_join(np_trend, by = c('region_id', 'dimension', 'score')) %>%
       mutate(goal = 'NP') %>%
       select(goal, dimension, region_id, score) %>%
       arrange(goal, dimension, region_id)
-    
+
     return(np_scores)
   }
-  
+
   ##########################################.
   ### Natural Products main starts here:
-  
+
   np_harvest <- np_rebuild_harvest(layers)
   np_exp     <-
     np_calc_exposure(np_harvest, hab_extent, FIS_status)
   np_risk    <- np_calc_risk(np_exp, r_cyanide, r_blast)
   np_sust    <- np_calc_sustainability(np_exp, np_risk)
   np_scores  <- np_calc_scores(np_sust)
-  
-  ## Reference Point Accounting
-  WriteRefPoint(goal = "NP",
-                method = "Harvest peak within region times 0.65 buffer",
-                ref_pt = "varies for each region")
-  ## Reference Point End  
-  
+
+
   return(np_scores)
 }
 
 
 CS <- function(layers) {
   scen_year <- layers$data$scenario_year
-  
+
   # layers for carbon storage
   extent_lyrs <-
     c('hab_mangrove_extent',
@@ -741,7 +716,7 @@ CS <- function(layers) {
     c('hab_mangrove_trend',
       'hab_seagrass_trend',
       'hab_saltmarsh_trend')
-  
+
   # get data together:
   extent <- AlignManyDataYears(extent_lyrs) %>%
     filter(!(habitat %in% c(
@@ -750,7 +725,7 @@ CS <- function(layers) {
     filter(scenario_year == scen_year) %>%
     select(region_id = rgn_id, habitat, extent = km2) %>%
     mutate(habitat = as.character(habitat))
-  
+
   health <- AlignManyDataYears(health_lyrs) %>%
     filter(!(habitat %in% c(
       "mangrove_inland1km", "mangrove_offshore"
@@ -758,7 +733,7 @@ CS <- function(layers) {
     filter(scenario_year == scen_year) %>%
     select(region_id = rgn_id, habitat, health) %>%
     mutate(habitat = as.character(habitat))
-  
+
   trend <- AlignManyDataYears(trend_lyrs) %>%
     filter(!(habitat %in% c(
       "mangrove_inland1km", "mangrove_offshore"
@@ -766,22 +741,22 @@ CS <- function(layers) {
     filter(scenario_year == scen_year) %>%
     select(region_id = rgn_id, habitat, trend) %>%
     mutate(habitat = as.character(habitat))
-  
+
   ## join layer data
   d <-  extent %>%
     full_join(health, by = c("region_id", "habitat")) %>%
     full_join(trend, by = c("region_id", "habitat"))
-  
+
   ## set ranks for each habitat
   habitat.rank <- c('mangrove'         = 139,
                     'saltmarsh'        = 210,
                     'seagrass'         = 83)
-  
+
   ## limit to CS habitats and add rank
   d <- d %>%
     mutate(rank = habitat.rank[habitat],
            extent = ifelse(extent == 0, NA, extent))
-  
+
   # status
   status <- d %>%
     filter(!is.na(rank) & !is.na(health) & !is.na(extent)) %>%
@@ -791,9 +766,9 @@ CS <- function(layers) {
     ))) * 100,
     dimension = 'status') %>%
     ungroup()
-  
+
   # trend
-  
+
   trend <- d %>%
     filter(!is.na(rank) & !is.na(trend) & !is.na(extent)) %>%
     group_by(region_id) %>%
@@ -801,18 +776,13 @@ CS <- function(layers) {
                                                                         rank, na.rm = TRUE)),
               dimension = 'trend') %>%
     ungroup()
-  
-  
+
+
   scores_CS <- rbind(status, trend)  %>%
     mutate(goal = 'CS') %>%
     select(goal, dimension, region_id, score)
-  
-  ## Reference Point Accounting
-  WriteRefPoint(goal = "CS",
-                method = "Health/condition variable based on current vs. historic extent",
-                ref_pt = "varies for each region/habitat")
-  ## Reference Point End  
-  
+
+
   ## create weights file for pressures/resilience calculations
   weights <- extent %>%
     filter(extent > 0) %>%
@@ -820,16 +790,16 @@ CS <- function(layers) {
     mutate(extent_rank = extent * rank) %>%
     mutate(layer = "element_wts_cs_km2_x_storage") %>%
     select(rgn_id = region_id, habitat, extent_rank, layer)
-  
+
   write.csv(
     weights,
     sprintf("temp/element_wts_cs_km2_x_storage_%s.csv", scen_year),
     row.names = FALSE
   )
-  
+
   layers$data$element_wts_cs_km2_x_storage <- weights
-  
-  
+
+
   # return scores
   return(scores_CS)
 }
@@ -839,7 +809,7 @@ CS <- function(layers) {
 CP <- function(layers) {
   ## read in layers
   scen_year <- layers$data$scenario_year
-  
+
   # layers for coastal protection
   extent_lyrs <-
     c(
@@ -865,30 +835,30 @@ CP <- function(layers) {
       'hab_coral_trend',
       'hab_seaice_trend'
     )
-  
+
   # get data together:
   extent <- AlignManyDataYears(extent_lyrs) %>%
     filter(!(habitat %in% "seaice_edge")) %>%
     filter(scenario_year == scen_year) %>%
     select(region_id = rgn_id, habitat, extent = km2) %>%
     mutate(habitat = as.character(habitat))
-  
+
   health <- AlignManyDataYears(health_lyrs) %>%
     filter(!(habitat %in% "seaice_edge")) %>%
     filter(scenario_year == scen_year) %>%
     select(region_id = rgn_id, habitat, health) %>%
     mutate(habitat = as.character(habitat))
-  
+
   trend <- AlignManyDataYears(trend_lyrs) %>%
     filter(!(habitat %in% "seaice_edge")) %>%
     filter(scenario_year == scen_year) %>%
     select(region_id = rgn_id, habitat, trend) %>%
     mutate(habitat = as.character(habitat))
-  
+
   ## sum mangrove_offshore + mangrove_inland1km = mangrove to match with extent and trend
   mangrove_extent <- extent %>%
     filter(habitat %in% c('mangrove_inland1km', 'mangrove_offshore'))
-  
+
   if (nrow(mangrove_extent) > 0) {
     mangrove_extent <- mangrove_extent %>%
       group_by(region_id) %>%
@@ -896,16 +866,16 @@ CP <- function(layers) {
       mutate(habitat = 'mangrove') %>%
       ungroup()
   }
-  
+
   extent <- extent %>%
     filter(!habitat %in% c('mangrove', 'mangrove_inland1km', 'mangrove_offshore')) %>%  #do not use all mangrove
     rbind(mangrove_extent)  #just the inland 1km and offshore
-  
+
   ## join layer data
   d <-  extent %>%
     full_join(health, by = c("region_id", "habitat")) %>%
     full_join(trend, by = c("region_id", "habitat"))
-  
+
   ## set ranks for each habitat
   habitat.rank <- c(
     'coral'            = 4,
@@ -914,14 +884,14 @@ CP <- function(layers) {
     'seagrass'         = 1,
     'seaice_shoreline' = 4
   )
-  
+
   ## limit to CP habitats and add rank
   d <- d %>%
     filter(habitat %in% names(habitat.rank)) %>%
     mutate(rank = habitat.rank[habitat],
            extent = ifelse(extent == 0, NA, extent))
-  
-  
+
+
   # status
   scores_CP <- d %>%
     filter(!is.na(rank) & !is.na(health) & !is.na(extent)) %>%
@@ -932,11 +902,11 @@ CP <- function(layers) {
                              ))) * 100) %>%
     mutate(dimension = 'status') %>%
     ungroup()
-  
+
   # trend
   d_trend <- d %>%
     filter(!is.na(rank) & !is.na(trend) & !is.na(extent))
-  
+
   if (nrow(d_trend) > 0) {
     scores_CP <- dplyr::bind_rows(
       scores_CP,
@@ -956,38 +926,33 @@ CP <- function(layers) {
                                     summarize(score = NA,
                                               dimension = 'trend'))
   }
-  
+
   ## finalize scores_CP
   scores_CP <- scores_CP %>%
     mutate(goal = 'CP') %>%
     select(region_id, goal, dimension, score)
-  
-  ## Reference Point Accounting
-  WriteRefPoint(goal = "CP",
-                method = "Health/condition variable based on current vs. historic extent",
-                ref_pt = "varies for each region/habitat")
-  ## Reference Point End  
-  
+
+
   ## create weights file for pressures/resilience calculations
-  
+
   weights <- extent %>%
     filter(extent > 0) %>%
     mutate(rank = habitat.rank[habitat]) %>%
     mutate(extent_rank = extent * rank) %>%
     mutate(layer = "element_wts_cp_km2_x_protection") %>%
     select(rgn_id = region_id, habitat, extent_rank, layer)
-  
+
   write.csv(
     weights,
     sprintf("temp/element_wts_cp_km2_x_protection_%s.csv", scen_year),
     row.names = FALSE
   )
-  
+
   layers$data$element_wts_cp_km2_x_protection <- weights
-  
+
   # return scores
   return(scores_CP)
-  
+
 }
 
 TR <- function(layers) {
@@ -995,89 +960,75 @@ TR <- function(layers) {
   ##  E   = Ep                         # Ep: % of direct tourism jobs. tr_jobs_pct_tourism.csv
   ##  S   = (S_score - 1) / (7 - 1)    # S_score: raw TTCI score, not normalized (1-7). tr_sustainability.csv
   ##  Xtr = E * S
-  
+
   pct_ref <- 90
-  
+
   scen_year <- layers$data$scenario_year
-  
-  
+
+
   ## read in layers
-  
+
   tourism <-
     AlignDataYears(layer_nm = "tr_jobs_pct_tourism", layers_obj = layers) %>%
     select(-layer_name)
   sustain <-
     AlignDataYears(layer_nm = "tr_sustainability", layers_obj = layers) %>%
     select(-layer_name)
-  
+
   tr_data  <-
     full_join(tourism, sustain, by = c('rgn_id', 'scenario_year'))
-  
+
   tr_model <- tr_data %>%
     mutate(E   = Ep,
            S   = (S_score - 1) / (7 - 1),
            # scale score from 1 to 7.
            Xtr = E * S)
-  
-  
+
+
   # regions with Travel Warnings
   rgn_travel_warnings <-
     AlignDataYears(layer_nm = "tr_travelwarnings", layers_obj = layers) %>%
     select(-layer_name)
-  
+
   ## incorporate Travel Warnings
   tr_model <- tr_model %>%
     left_join(rgn_travel_warnings, by = c('rgn_id', 'scenario_year')) %>%
     mutate(Xtr = ifelse(!is.na(multiplier), multiplier * Xtr, Xtr)) %>%
     select(-multiplier)
-  
-  
+
+
   ### Calculate status based on quantile reference (see function call for pct_ref)
   tr_model <- tr_model %>%
     group_by(scenario_year) %>%
     mutate(Xtr_q = quantile(Xtr, probs = pct_ref / 100, na.rm = TRUE)) %>%
     mutate(status  = ifelse(Xtr / Xtr_q > 1, 1, Xtr / Xtr_q)) %>% # rescale to qth percentile, cap at 1
     ungroup()
-  
-  ## Reference Point Accounting
-  ref_point <- tr_model %>%
-    filter(scenario_year == scen_year) %>%
-    select(Xtr_q) %>%
-    unique() %>%
-    data.frame() %>%
-    .$Xtr_q
-  
-  WriteRefPoint(
-    goal = "TR",
-    method = paste0('spatial: ', as.character(pct_ref), "th quantile"),
-    ref_pt = as.character(ref_point)
-  )
-  ## Reference Point End  
-  
+
+
   # get status
   tr_status <- tr_model %>%
     filter(scenario_year == scen_year) %>%
     select(region_id = rgn_id, score = status) %>%
     mutate(score = score * 100) %>%
     mutate(dimension = 'status')
-  
-  
+
+
   # calculate trend
-  
+
   trend_data <- tr_model %>%
     filter(!is.na(status))
-  
+
   trend_years <- (scen_year - 4):(scen_year)
-  
+
   tr_trend <-
     CalculateTrend(status_data = trend_data, trend_years = trend_years)
-  
-  
+
+
   # bind status and trend by rows
   tr_score <- bind_rows(tr_status, tr_trend) %>%
     mutate(goal = 'TR')
-  
-  
+
+
   # assign NA for uninhabitated islands
   if (conf$config$layer_region_labels == 'rgn_global') {
     unpopulated = layers$data$le_popn %>%
@@ -1088,11 +1039,11 @@ TR <- function(layers) {
                             NA,
                             tr_score$score)
   }
-  
+
   # return final scores
   scores <- tr_score %>%
     select(region_id, goal, dimension, score)
-  
+
   return(scores)
 }
 
@@ -1422,10 +1373,10 @@ ICO <- function(layers){
 
 LSP <- function(layers) {
   scen_year <- layers$data$scenario_year
-  
+
   ref_pct_cmpa <- 30
   ref_pct_cp <- 30
-  
+
   # select data
   total_area <-
     rbind(layers$data$rgn_area_inland1km,
@@ -1435,8 +1386,8 @@ LSP <- function(layers) {
     select(region_id,
            area_inland1km = rgn_area_inland1km,
            area_offshore3nm = rgn_area_offshore3nm)
-  
-  
+
+
   offshore <-
     AlignDataYears(layer_nm = "lsp_prot_area_offshore3nm", layers_obj = layers) %>%
     select(region_id = rgn_id,
@@ -1447,15 +1398,15 @@ LSP <- function(layers) {
     select(region_id = rgn_id,
            year = scenario_year,
            cp = a_prot_1km)
-  
-  
+
+
   # ry_offshore <-  layers$data$lsp_prot_area_offshore3nm %>%
   #   select(region_id = rgn_id, year, cmpa = a_prot_3nm)
   # ry_inland <- layers$data$lsp_prot_area_inland1km %>%
   #   select(region_id = rgn_id, year, cp = a_prot_1km)
   #
   lsp_data <- full_join(offshore, inland, by = c("region_id", "year"))
-  
+
   # fill in time series for all regions
   lsp_data_expand <-
     expand.grid(region_id = unique(lsp_data$region_id),
@@ -1465,8 +1416,8 @@ LSP <- function(layers) {
     mutate(cp = ifelse(is.na(cp), 0, cp),
            cmpa = ifelse(is.na(cmpa), 0, cmpa)) %>%
     mutate(pa     = cp + cmpa)
-  
-  
+
+
   # get percent of total area that is protected for inland1km (cp) and offshore3nm (cmpa) per year
   # and calculate status score
   status_data <- lsp_data_expand %>%
@@ -1477,36 +1428,24 @@ LSP <- function(layers) {
       status    = (pmin(pct_cp / ref_pct_cp, 1) + pmin(pct_cmpa / ref_pct_cmpa, 1)) / 2
     ) %>%
     filter(!is.na(status))
-  
+
   # extract status based on specified year
-  
+
   r.status <- status_data %>%
     filter(year == scen_year) %>%
     mutate(score = status * 100) %>%
     select(region_id, score) %>%
     mutate(dimension = "status")
-  
+
   # calculate trend
-  
+
   trend_years <- (scen_year - 4):(scen_year)
-  
+
   r.trend <-
     CalculateTrend(status_data = status_data, trend_years = trend_years)
-  
-  
-  ## Reference Point Accounting
-  WriteRefPoint(
-    goal = "LSP",
-    method = paste0(
-      ref_pct_cmpa,
-      "% marine protected area; ",
-      ref_pct_cp,
-      "% coastal protected area"
-    ),
-    ref_pt = "varies by area of region's eez and 1 km inland"
-  )
-  ## Reference Point End  
-  
+
+
+
   # return scores
   scores <- bind_rows(r.status, r.trend) %>%
     mutate(goal = "LSP")
@@ -1525,7 +1464,7 @@ SP <- function(scores) {
     mutate(goal = "SP") %>%
     select(region_id, goal, dimension, score) %>%
     data.frame()
-  
+
   # return all scores
   return(rbind(scores, s))
 }
@@ -1533,7 +1472,7 @@ SP <- function(scores) {
 
 CW <- function(layers) {
   scen_year <- layers$data$scenario_year
-  
+
   ### function to calculate geometric mean:
   geometric.mean2 <- function (x, na.rm = TRUE) {
     if (is.null(nrow(x))) {
@@ -1543,8 +1482,8 @@ CW <- function(layers) {
       exp(apply(log(x), 2, mean, na.rm = na.rm))
     }
   }
-  
-  
+
+
   # layers
   trend_lyrs <-
     c('cw_chemical_trend',
@@ -1556,12 +1495,12 @@ CW <- function(layers) {
       'po_nutrients_3nm',
       'po_chemicals_3nm',
       'po_trash')
-  
+
   # get data together:
   prs_data <- AlignManyDataYears(prs_lyrs) %>%
     dplyr::filter(scenario_year == scen_year) %>%
     select(region_id = rgn_id, value = pressure_score)
-  
+
   d_pressures <- prs_data %>%
     mutate(pressure = 1 - value) %>%  # invert pressures
     group_by(region_id) %>%
@@ -1569,41 +1508,36 @@ CW <- function(layers) {
     mutate(score = score * 100) %>%
     mutate(dimension = "status") %>%
     ungroup()
-  
-  
+
+
   # get trend data together:
   trend_data <- AlignManyDataYears(trend_lyrs) %>%
     dplyr::filter(scenario_year == scen_year) %>%
     select(region_id = rgn_id, value = trend)
-  
+
   d_trends <- trend_data %>%
     mutate(trend = -1 * value)  %>%  # invert trends
     group_by(region_id) %>%
     summarize(score = mean(trend, na.rm = TRUE)) %>%
     mutate(dimension = "trend") %>%
     ungroup()
-  
-  
+
+
   # return scores
   scores <- rbind(d_pressures, d_trends) %>%
     mutate(goal = "CW") %>%
     select(region_id, goal, dimension, score) %>%
     data.frame()
-  
-  ## Reference Point Accounting
-  WriteRefPoint(goal   = "CW",
-                method = "spatial: pressures scaled from 0-1 at raster level",
-                ref_pt = NA)
-  ## Reference Point End  
-    
+
+
   return(scores)
 }
 
 
 HAB <- function(layers) {
   scen_year <- layers$data$scenario_year
-  
-  
+
+
   extent_lyrs <-
     c(
       'hab_mangrove_extent',
@@ -1631,24 +1565,24 @@ HAB <- function(layers) {
       'hab_seaice_trend',
       'hab_softbottom_trend'
     )
-  
+
   # get data together:
   extent <- AlignManyDataYears(extent_lyrs) %>%
     filter(scenario_year == scen_year) %>%
     select(region_id = rgn_id, habitat, extent = km2) %>%
     mutate(habitat = as.character(habitat))
-  
+
   health <- AlignManyDataYears(health_lyrs) %>%
     filter(scenario_year == scen_year) %>%
     select(region_id = rgn_id, habitat, health) %>%
     mutate(habitat = as.character(habitat))
-  
+
   trend <- AlignManyDataYears(trend_lyrs) %>%
     filter(scenario_year == scen_year) %>%
     select(region_id = rgn_id, habitat, trend) %>%
     mutate(habitat = as.character(habitat))
-  
-  
+
+
   # join and limit to HAB habitats
   d <- health %>%
     full_join(trend, by = c('region_id', 'habitat')) %>%
@@ -1665,20 +1599,20 @@ HAB <- function(layers) {
     ) %>%
     mutate(w  = ifelse(!is.na(extent) & extent > 0, 1, NA)) %>%
     filter(!is.na(w))
-  
+
   if (sum(d$w %in% 1 & is.na(d$trend)) > 0) {
     warning(
       "Some regions/habitats have extent data, but no trend data.  Consider estimating these values."
     )
   }
-  
+
   if (sum(d$w %in% 1 & is.na(d$health)) > 0) {
     warning(
       "Some regions/habitats have extent data, but no health data.  Consider estimating these values."
     )
   }
-  
-  
+
+
   ## calculate scores
   status <- d %>%
     group_by(region_id) %>%
@@ -1686,26 +1620,21 @@ HAB <- function(layers) {
     summarize(score = pmin(1, sum(health) / sum(w)) * 100,
               dimension = 'status') %>%
     ungroup()
-  
+
   trend <- d %>%
     group_by(region_id) %>%
     filter(!is.na(trend)) %>%
     summarize(score =  sum(trend) / sum(w),
               dimension = 'trend')  %>%
     ungroup()
-  
+
   scores_HAB <- rbind(status, trend) %>%
     mutate(goal = "HAB") %>%
     select(region_id, goal, dimension, score)
-  
-  ## Reference Point Accounting
-  WriteRefPoint(goal = "HAB",
-                method = "Health/condition variable based on current vs. historic extent",
-                ref_pt = "varies for each region/habitat")
-  ## Reference Point End    
-  
+
+
   ## create weights file for pressures/resilience calculations
-  
+
   weights <- extent %>%
     filter(
       habitat %in% c(
@@ -1721,14 +1650,14 @@ HAB <- function(layers) {
     mutate(boolean = 1) %>%
     mutate(layer = "element_wts_hab_pres_abs") %>%
     select(rgn_id = region_id, habitat, boolean, layer)
-  
+
   write.csv(weights,
             sprintf("temp/element_wts_hab_pres_abs_%s.csv", scen_year),
             row.names = FALSE)
-  
+
   layers$data$element_wts_hab_pres_abs <- weights
-  
-  
+
+
   # return scores
   return(scores_HAB)
 }
@@ -1740,13 +1669,8 @@ SPP <- function(layers) {
     mutate(dimension = ifelse(layer == "spp_status", "status", "trend")) %>%
     mutate(score = ifelse(dimension == 'status', score * 100, score)) %>%
     select(region_id = rgn_id, goal, dimension, score)
-  
-  ## Reference Point Accounting
-  WriteRefPoint(goal = "SPP",
-                method = "Average of IUCN risk categories, scaled to historic extinction",
-                ref_pt = NA)
-  ## Reference Point End  
-  
+
+
   return(scores)
 }
 
@@ -1758,7 +1682,7 @@ BD <- function(scores) {
     summarize(score = mean(score, na.rm = TRUE)) %>%
     mutate(goal = 'BD') %>%
     data.frame()
-  
+
   # return all scores
   return(rbind(scores, d[, c('region_id', 'goal', 'dimension', 'score')]))
 }
@@ -1768,14 +1692,14 @@ PreGlobalScores <- function(layers, conf, scores) {
   name_region_labels <- conf$config$layer_region_labels
   rgns <- layers$data[[name_region_labels]] %>%
     select(id_num = rgn_id, val_chr = label)
-  
+
   # limit to just desired regions and global (region_id==0)
   scores <- subset(scores, region_id %in% c(rgns[, 'id_num'], 0))
-  
+
   # apply NA to Antarctica
   id_ant <- subset(rgns, val_chr == 'Antarctica', id_num, drop = TRUE)
   scores[scores$region_id == id_ant, 'score'] = NA
-  
+
   return(scores)
 }
 
@@ -1784,8 +1708,8 @@ FinalizeScores <- function(layers, conf, scores) {
   name_region_labels <- conf$config$layer_region_labels
   rgns <- layers$data[[name_region_labels]] %>%
     select(id_num = rgn_id, val_chr = label)
-  
-  
+
+
   # add NAs to missing combos (region_id, goal, dimension)
   d <- expand.grid(list(
     score_NA  = NA,
@@ -1812,12 +1736,12 @@ FinalizeScores <- function(layers, conf, scores) {
     ))
   scores <-
     merge(scores, d, all = TRUE)[, c('goal', 'dimension', 'region_id', 'score')]
-  
+
   # order
   scores <- arrange(scores, goal, dimension, region_id)
-  
+
   # round scores
   scores$score <- round(scores$score, 2)
-  
+
   return(scores)
 }
