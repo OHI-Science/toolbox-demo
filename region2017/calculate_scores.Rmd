@@ -1,0 +1,90 @@
+---
+title: "Calculate OHI scores"
+output: html_document
+---
+
+This R code calculates OHI scores with the `ohicore` package.
+
+- First chunk of R code ensures your files are properly configured for `ohicore`.
+- The `ohicore` function CalculateAll() calculates OHI scores.
+
+This is an RMarkdown file, where written text appears with a white background and R code appears with a grey background as a "code chunk". You can run R code line-by-line, or as a whole chunk by clicking the green triangle at the top-right corner of the code chunk's grey box. 
+
+----
+
+Run this code chunk one time only to install packages you don't already have. *Note: warnings are fine.*
+
+```{r install packages, eval=FALSE}
+## install packages from R community
+install.packages("tidyverse")
+install.packages("stringr")
+install.packages("zoo")
+install.packages("here")
+install.package("devtools")
+
+## install the ohicore package from OHI team
+devtools::install_github('ohi-science/ohicore@dev')
+```
+
+Run this every time you start working: 
+
+```{r setup, eval=FALSE}
+## load package libraries
+library(tidyverse)
+library(stringr)
+library(zoo)
+library(here)
+library(ohicore)
+
+## set the working directory to a filepath we all have
+setwd(here::here('region2017'))
+```
+
+Next, ensure that  all files in your repo are properly configured.
+
+```{r configure toolbox, eval=FALSE}
+## load scenario configuration
+conf <- ohicore::Conf('conf')
+
+## check that scenario layers files in the \layers folder match layers.csv registration. Layers files are not modified.
+ohicore::CheckLayers('layers.csv', 'layers', flds_id=conf$config$layers_id_fields)
+
+## load scenario layers for ohicore to access. Layers files are not modified.
+layers <- ohicore::Layers('layers.csv', 'layers')
+
+## select corresponding data year to use for pressures and resilience
+scenario_years <- 2016
+layers$data$scenario_year <- scenario_years
+```
+  
+Calculate and save scores.  
+  
+```{r calculate scores, eval=FALSE}
+## calculate scenario scores
+scores <- ohicore::CalculateAll(conf, layers)
+
+## save scores as scores.csv
+readr::write_csv(scores, 'scores.csv', na='')
+```
+
+
+Create figures
+
+Flower plots for each region
+```{r plot, eval=FALSE}
+## source script (to be incorporated into ohicore)
+source('https://raw.githubusercontent.com/OHI-Science/arc/master/circle2016/plot_flower_local.R')
+
+PlotFlower(region_plot = rgns_to_plot,
+           assessment_name = "Toolbox Demo",
+           dir_fig_save    = "reports/figures")
+```
+
+
+
+## Example workflow
+## You are encouraged to use this script when developing individual goal models. A good workflow is:
+  ## 1. prepare data layers in the /prep folders (script as much as possible in R)
+  ## 2. register data layers in layers.csv and save them in /layers folder
+  ## 3. source configure_repo.r to ensure proper configuration
+  ## 4. develop goal models in functions.r, running individual goal models line by line

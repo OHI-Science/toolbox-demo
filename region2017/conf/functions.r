@@ -1,7 +1,7 @@
 ## functions.R.
 ## Each OHI goal model is a separate R function.
 ## The function name is the 2- or 3- letter code for each goal or subgoal;
-## for example, FIS is the Fishing subgoal of Food Provision (FP).
+## for example, FIS is the Wild Fisheries subgoal of FP, Food Provision.
 
 
 FIS <- function(layers) {
