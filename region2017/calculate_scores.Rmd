@@ -8,6 +8,7 @@ R code to calculate OHI scores with the `ohicore` package.
 This is an RMarkdown file, where written text appears with a white background and R code appears with a grey background as a "code chunk". You can run R code line-by-line, or as a whole chunk by clicking the green triangle at the top-right corner of the code chunk's grey box. 
 
 ----
+
 ## Install R packages
 
 Run this code chunk one time only to install packages you don't already have. This is like wiring a building for electricity. *Note: warnings are fine.*
