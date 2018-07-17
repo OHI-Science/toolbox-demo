@@ -1,0 +1,10 @@
+region_id,region_name,flower_png
+0,Toolbox Demo,reports/figures/flower_ToolboxDemo.png
+5,West Vancouver Island,reports/figures/flower_WestVancouverIsland.png
+6,Strait of Georgia,reports/figures/flower_StraitofGeorgia.png
+1,North Coast,reports/figures/flower_NorthCoast.png
+2,Haida Gwaii,reports/figures/flower_HaidaGwaii.png
+3,Central Coast,reports/figures/flower_CentralCoast.png
+4,North Vancouver Island,reports/figures/flower_NorthVancouverIsland.png
+8,Aristazabal Island,reports/figures/flower_AristazabalIsland.png
+7,Pacific Offshore,reports/figures/flower_PacificOffshore.png
