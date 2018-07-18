@@ -372,11 +372,13 @@ AO <- function(layers) {
 
   r <- AlignDataYears(layer_nm = "ao_access", layers_obj = layers) %>%
     rename(region_id = rgn_id, access = value) %>%
+    select(-layer_name) %>%
     na.omit()
 
   ry <-
     AlignDataYears(layer_nm = "ao_need", layers_obj = layers) %>%
     rename(region_id = rgn_id, need = value) %>%
+    select(-layer_name) %>%
     left_join(r, by = c("region_id", "scenario_year"))
 
   # model

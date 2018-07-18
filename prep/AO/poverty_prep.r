@@ -6,11 +6,11 @@
 
 ## setup: libraries, file paths ----
 library(tidyverse) # install.packages('tidyverse')
-dir_layers <- file.path('~/github/toolbox-demo/region2016/layers')
-
+library(here) # install.packages('here')
+dir_layers <- here::here('region2017/layers')
 
 ## import dummy 'local data' that is already formatted nicely. Note the naming convention of the data file: it is "goalcode_layername_assessmentYEAR.csv".
-data_file  <- file.path(dir_layers, 'ao_need_gl2016.csv')
+data_file  <- file.path(dir_layers, 'ao_need_gl2017.csv')
 d <- readr::read_csv(data_file)
 
 ## look at a summary to see the range of values
@@ -23,7 +23,6 @@ d2 <- d %>%
 
 
 ## save this local data layer in "layers" folder with the same naming convention as above format
-
 readr::write_csv(d2, file.path(dir_layers, "ao_poverty_demo2017.csv"))
 
 
